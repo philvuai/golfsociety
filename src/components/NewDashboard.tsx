@@ -28,13 +28,13 @@ const SidebarTitle = styled.h2`
   color: #f9fafb;
 `;
 
-const SidebarButton = styled.button`
+const SidebarButton = styled.button<{ active?: boolean }>`
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  background: #374151;
-  color: #d1d5db;
+  background: ${props => props.active ? '#4b5563' : '#374151'};
+  color: ${props => props.active ? '#f9fafb' : '#d1d5db'};
   border: none;
   padding: 12px 16px;
   border-radius: 8px;
@@ -42,11 +42,25 @@ const SidebarButton = styled.button`
   transition: all 0.2s ease;
   font-size: 14px;
   font-weight: 500;
+  text-align: left;
 
   &:hover {
     background: #4b5563;
     color: #f9fafb;
   }
+`;
+
+const EventsSection = styled.div`
+  margin-bottom: 16px;
+`;
+
+const EventsSectionTitle = styled.h3`
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
 `;
 
 const Content = styled.div`
@@ -251,24 +265,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [editSidebarOpen, setEditSidebarOpen] = useState(false);
 
   const activeEvent = events.find(event => event.id === activeEventId) || events[0];
-  const players = Array.from({ length: activeEvent?.playerCount || 0 }, (_, i) => ({
-    id: `${activeEvent?.id}-player-${i + 1}`,
-    name: `Player ${i + 1}`,
-    joinedDate: new Date().toISOString()
-  }));
 
   // Save data to localStorage whenever it changes
   useEffect(() => {
     const dashboardData = {
-      players,
-      currentEvent,
-      funds,
-      surplus,
-      notes,
+      events,
+      activeEventId,
       lastUpdated: new Date().toISOString()
     };
     localStorage.setItem('golf-society-dashboard', JSON.stringify(dashboardData));
-  }, [players, currentEvent, funds, surplus, notes]);
+  }, [events, activeEventId]);
 
   // Load data from localStorage on component mount
   useEffect(() => {
@@ -276,31 +282,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     if (savedData) {
       try {
         const data = JSON.parse(savedData);
-        setPlayers(data.players || []);
-        setCurrentEvent(data.currentEvent || null);
-        setFunds(data.funds || { bankTransfer: 0, cash: 0, card: 0 });
-        setSurplus(data.surplus || 0);
-        setNotes(data.notes || '');
+        if (data.events && data.events.length > 0) {
+          setEvents(data.events);
+          setActiveEventId(data.activeEventId || data.events[0].id);
+        }
       } catch (error) {
         console.error('Error loading saved dashboard data:', error);
       }
     }
   }, []);
 
-  const totalFunds = funds.bankTransfer + funds.cash + funds.card;
-
-  const handleSaveData = (data: {
-    players: Player[];
-    currentEvent: Event | null;
-    funds: Funds;
-    surplus: number;
-    notes: string;
-  }) => {
-    setPlayers(data.players);
-    setCurrentEvent(data.currentEvent);
-    setFunds(data.funds);
-    setSurplus(data.surplus);
-    setNotes(data.notes);
+  const handleSaveData = (updatedEvent: Event) => {
+    setEvents(events.map(event => event.id === updatedEvent.id ? updatedEvent : event));
+    setEditSidebarOpen(false);
   };
 
   const handleNewEvent = () => {
@@ -310,25 +304,44 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       date: new Date().toISOString(),
       location: '',
       status: 'upcoming',
-      players: []
+      players: [],
+      playerCount: 0,
+      funds: { bankTransfer: 0, cash: 0, card: 0 },
+      surplus: 0,
+      notes: ''
     };
-    setCurrentEvent(newEvent);
+    setEvents([...events, newEvent]);
+    setActiveEventId(newEvent.id);
     setEditSidebarOpen(true);
   };
+
+  const totalFunds = activeEvent ? 
+    activeEvent.funds.bankTransfer + activeEvent.funds.cash + activeEvent.funds.card : 0;
 
   return (
     <>
       <DashboardContainer>
         <Sidebar>
           <SidebarTitle>Welcome, {user.username}</SidebarTitle>
-          <SidebarButton onClick={onLogout}>
-            <LogOut size={18} /> Log Out
-          </SidebarButton>
+          
+          <EventsSection>
+            <EventsSectionTitle>Events</EventsSectionTitle>
+            {events.map(event => (
+              <SidebarButton 
+                key={event.id} 
+                active={event.id === activeEventId}
+                onClick={() => setActiveEventId(event.id)}
+              >
+                {event.name}
+              </SidebarButton>
+            ))}
+          </EventsSection>
+          
           <SidebarButton onClick={handleNewEvent}>
             <Plus size={18} /> New Event
           </SidebarButton>
-          <SidebarButton onClick={() => setEditSidebarOpen(true)}>
-            <PenTool size={18} /> Edit Dashboard
+          <SidebarButton onClick={onLogout}>
+            <LogOut size={18} /> Log Out
           </SidebarButton>
         </Sidebar>
 
@@ -338,96 +351,94 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             <Subtitle>Manage your golf events, players, and finances</Subtitle>
           </Header>
 
-          <Grid>
-            <Card>
-              <CardHeader>
-                <CardTitle>Total Players</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <StatValue>{players.length}</StatValue>
-                <StatLabel>Active Members</StatLabel>
-              </CardContent>
-            </Card>
+          {activeEvent && (
+            <Grid>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Total Players</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <StatValue>{activeEvent.playerCount}</StatValue>
+                  <StatLabel>Active Members</StatLabel>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Current Event</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {currentEvent ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Current Event</CardTitle>
+                </CardHeader>
+                <CardContent>
                   <EventInfo>
                     <EventDetail>
                       <EventLabel>Event:</EventLabel>
-                      <EventValue>{currentEvent.name}</EventValue>
+                      <EventValue>{activeEvent.name}</EventValue>
                     </EventDetail>
                     <EventDetail>
                       <EventLabel>Location:</EventLabel>
-                      <EventValue>{currentEvent.location || 'TBD'}</EventValue>
+                      <EventValue>{activeEvent.location || 'TBD'}</EventValue>
                     </EventDetail>
                     <EventDetail>
                       <EventLabel>Status:</EventLabel>
-                      <EventValue>{currentEvent.status}</EventValue>
+                      <EventValue>{activeEvent.status}</EventValue>
                     </EventDetail>
                     <EventDetail>
                       <EventLabel>Players:</EventLabel>
-                      <EventValue>{currentEvent.players.length}</EventValue>
+                      <EventValue>{activeEvent.playerCount}</EventValue>
                     </EventDetail>
                     <EventDetail>
                       <EventLabel>Date:</EventLabel>
-                      <EventValue>{new Date(currentEvent.date).toLocaleDateString()}</EventValue>
+                      <EventValue>{new Date(activeEvent.date).toLocaleDateString()}</EventValue>
                     </EventDetail>
                   </EventInfo>
-                ) : (
-                  <StatLabel>No active event</StatLabel>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Funds</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FundsList>
-                  <FundItem>
-                    <FundLabel>Bank Transfer</FundLabel>
-                    <FundAmount>£{funds.bankTransfer.toFixed(2)}</FundAmount>
-                  </FundItem>
-                  <FundItem>
-                    <FundLabel>Cash</FundLabel>
-                    <FundAmount>£{funds.cash.toFixed(2)}</FundAmount>
-                  </FundItem>
-                  <FundItem>
-                    <FundLabel>Card</FundLabel>
-                    <FundAmount>£{funds.card.toFixed(2)}</FundAmount>
-                  </FundItem>
-                  <FundItem>
-                    <FundLabel>Total</FundLabel>
-                    <FundAmount>£{totalFunds.toFixed(2)}</FundAmount>
-                  </FundItem>
-                </FundsList>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Funds</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FundsList>
+                    <FundItem>
+                      <FundLabel>Bank Transfer</FundLabel>
+                      <FundAmount>£{activeEvent.funds.bankTransfer.toFixed(2)}</FundAmount>
+                    </FundItem>
+                    <FundItem>
+                      <FundLabel>Cash</FundLabel>
+                      <FundAmount>£{activeEvent.funds.cash.toFixed(2)}</FundAmount>
+                    </FundItem>
+                    <FundItem>
+                      <FundLabel>Card</FundLabel>
+                      <FundAmount>£{activeEvent.funds.card.toFixed(2)}</FundAmount>
+                    </FundItem>
+                    <FundItem>
+                      <FundLabel>Total</FundLabel>
+                      <FundAmount>£{totalFunds.toFixed(2)}</FundAmount>
+                    </FundItem>
+                  </FundsList>
+                </CardContent>
+              </Card>
 
-            <SurplusCard>
-              <SurplusHeader>
-                <SurplusTitle>Surplus Funds</SurplusTitle>
-              </SurplusHeader>
-              <CardContent>
-                <SurplusValue>£{surplus.toFixed(2)}</SurplusValue>
-                <StatLabel style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Available Balance</StatLabel>
-              </CardContent>
-            </SurplusCard>
+              <SurplusCard>
+                <SurplusHeader>
+                  <SurplusTitle>Surplus Funds</SurplusTitle>
+                </SurplusHeader>
+                <CardContent>
+                  <SurplusValue>£{activeEvent.surplus.toFixed(2)}</SurplusValue>
+                  <StatLabel style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Available Balance</StatLabel>
+                </CardContent>
+              </SurplusCard>
 
-            <NotesCard>
-              <CardHeader>
-                <CardTitle>Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <NotesText>{notes}</NotesText>
-              </CardContent>
-            </NotesCard>
-          </Grid>
+              <NotesCard>
+                <CardHeader>
+                  <CardTitle>Notes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <NotesText>{activeEvent.notes}</NotesText>
+                </CardContent>
+              </NotesCard>
+            </Grid>
+          )}
         </Content>
       </DashboardContainer>
       
@@ -438,16 +449,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       <EditSidebar
         isOpen={editSidebarOpen}
         onClose={() => setEditSidebarOpen(false)}
-        players={players}
-        currentEvent={currentEvent}
-        funds={funds}
-        surplus={surplus}
-        notes={notes}
+        event={activeEvent}
         onSave={handleSaveData}
       />
     </>
   );
-}
+};
 
 export default Dashboard;
-

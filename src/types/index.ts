@@ -12,6 +12,10 @@ export interface Event {
   location: string;
   status: 'upcoming' | 'in-progress' | 'completed';
   players: string[];
+  playerCount: number;
+  funds: Funds;
+  surplus: number;
+  notes: string;
 }
 
 export interface Funds {

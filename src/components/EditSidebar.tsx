@@ -127,46 +127,30 @@ const SaveButton = styled(Button)`
 interface EditSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  players: Player[];
-  currentEvent: Event | null;
-  funds: Funds;
-  surplus: number;
-  notes: string;
-  onSave: (data: {
-    players: Player[];
-    currentEvent: Event | null;
-    funds: Funds;
-    surplus: number;
-    notes: string;
-  }) => void;
+  event: Event | null;
+  onSave: (event: Event) => void;
 }
 
 const EditSidebar: React.FC<EditSidebarProps> = ({
   isOpen,
   onClose,
-  players: initialPlayers,
-  currentEvent: initialEvent,
-  funds: initialFunds,
-  surplus: initialSurplus,
-  notes: initialNotes,
+  event,
   onSave
 }) => {
-  const [players, setPlayers] = useState<Player[]>(initialPlayers);
-  const [currentEvent, setCurrentEvent] = useState<Event | null>(initialEvent);
-  const [funds, setFunds] = useState<Funds>(initialFunds);
-  const [surplus, setSurplus] = useState(initialSurplus);
-  const [notes, setNotes] = useState(initialNotes);
+  const [eventData, setEventData] = useState<Event | null>(event);
+
+  // Update local state when event prop changes
+  React.useEffect(() => {
+    setEventData(event);
+  }, [event]);
 
   const handleSave = () => {
-    onSave({
-      players,
-      currentEvent,
-      funds,
-      surplus,
-      notes
-    });
-    onClose();
+    if (eventData) {
+      onSave(eventData);
+    }
   };
+
+  if (!eventData) return null;
 
   return (
     <>
