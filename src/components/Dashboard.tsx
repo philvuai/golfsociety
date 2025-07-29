@@ -6,111 +6,225 @@ import { Player, Event, Funds } from '../types';
 
 const DashboardContainer = styled.div`
   display: flex;
+  background: #f8fafc;
+  min-height: 100vh;
 `;
 
 const Sidebar = styled.div`
-  width: 250px;
-  background: #1e3c72;
+  width: 280px;
+  background: #1f2937;
   color: white;
-  padding: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-right: 1px solid #374151;
+`;
+
+const SidebarTitle = styled.h2`
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #f9fafb;
 `;
 
 const SidebarButton = styled.button`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  background: transparent;
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 12px 15px;
+  background: #374151;
+  color: #d1d5db;
+  border: none;
+  padding: 12px 16px;
   border-radius: 8px;
-  margin-bottom: 10px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: #4b5563;
+    color: #f9fafb;
   }
 `;
 
 const Content = styled.div`
   flex: 1;
-  padding: 40px;
-  background: #f4f6f8;
-  min-height: 100vh;
+  padding: 32px;
+  background: #f8fafc;
 `;
 
 const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 `;
 
 const Title = styled.h1`
-  color: #333;
-  font-size: 32px;
+  color: #111827;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
 `;
 
-const ActionButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #2a5298;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 5px;
-  font-size: 16px;
+const Subtitle = styled.p`
+  color: #6b7280;
+  font-size: 14px;
+`;
+
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+`;
+
+const Card = styled.div`
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
 
   &:hover {
-    background: #1e3c72;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
 `;
 
-const Section = styled.div`
-  margin-bottom: 30px;
+const CardHeader = styled.div`
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f3f4f6;
 `;
 
-const SectionTitle = styled.h2`
-  color: #666;
-  font-size: 24px;
-  margin-bottom: 10px;
+const CardTitle = styled.h3`
+  color: #111827;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
 `;
 
-const List = styled.ul`
-  list-style: none;
-  padding: 0;
+const CardContent = styled.div`
+  padding: 20px 24px;
 `;
 
-const ListItem = styled.li`
-  background: white;
-  border-radius: 10px;
-  padding: 15px 20px;
-  margin-bottom: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+const StatValue = styled.div`
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
 `;
 
-const FundsTotal = styled.div`
-  text-align: right;
-  font-size: 18px;
-  font-weight: bold;
-  margin-top: 10px;
+const StatLabel = styled.div`
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
 `;
 
-const SurplusAmount = styled.div`
-  font-size: 24px;
-  font-weight: bold;
-  color: #2a5298;
+const EventInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const EventDetail = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+`;
+
+const EventLabel = styled.span`
+  color: #6b7280;
+  font-weight: 500;
+`;
+
+const EventValue = styled.span`
+  color: #111827;
+  font-weight: 600;
+`;
+
+const FundsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const FundItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+  
+  &:last-child {
+    border-bottom: none;
+    font-weight: 600;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+  }
+`;
+
+const FundLabel = styled.span`
+  color: #6b7280;
+  font-size: 14px;
+`;
+
+const FundAmount = styled.span`
+  color: #111827;
+  font-weight: 600;
+  font-size: 14px;
+`;
+
+const SurplusCard = styled(Card)`
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+`;
+
+const SurplusHeader = styled(CardHeader)`
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+`;
+
+const SurplusTitle = styled(CardTitle)`
+  color: white;
+`;
+
+const SurplusValue = styled(StatValue)`
+  color: white;
+`;
+
+const NotesCard = styled(Card)`
+  grid-column: 1 / -1;
 `;
 
 const NotesText = styled.div`
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  font-size: 16px;
-  line-height: 1.5;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+`;
+
+const FloatingActionButton = styled.button`
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #4f46e5;
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+  }
 `;
 
 interface DashboardProps {
@@ -183,74 +297,137 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     setNotes(data.notes);
   };
 
+  const handleNewEvent = () => {
+    const newEvent: Event = {
+      id: Date.now().toString(),
+      name: 'New Event',
+      date: new Date().toISOString(),
+      location: '',
+      status: 'upcoming',
+      players: []
+    };
+    setCurrentEvent(newEvent);
+    setEditSidebarOpen(true);
+  };
+
   return (
     <>
       <DashboardContainer>
         <Sidebar>
-          <h2>{user.username}</h2>
+          <SidebarTitle>Welcome, {user.username}</SidebarTitle>
           <SidebarButton onClick={onLogout}>
-            <LogOut size={20} /> Log Out
+            <LogOut size={18} /> Log Out
           </SidebarButton>
-          <SidebarButton>
-            <Plus size={20} /> New Event
+          <SidebarButton onClick={handleNewEvent}>
+            <Plus size={18} /> New Event
           </SidebarButton>
           <SidebarButton onClick={() => setEditSidebarOpen(true)}>
-            <PenTool size={20} /> Edit Dashboard
+            <PenTool size={18} /> Edit Dashboard
           </SidebarButton>
         </Sidebar>
 
         <Content>
           <Header>
             <Title>The Golf Society Dashboard</Title>
-            <ActionButton onClick={() => setEditSidebarOpen(true)}>
-              <Menu size={20} /> Edit
-            </ActionButton>
+            <Subtitle>Manage your golf events, players, and finances</Subtitle>
           </Header>
 
-          <Section>
-            <SectionTitle>Players ({players.length})</SectionTitle>
-            <List>
-              {players.map((player) => (
-                <ListItem key={player.id}>{player.name}</ListItem>
-              ))}
-            </List>
-          </Section>
+          <Grid>
+            <Card>
+              <CardHeader>
+                <CardTitle>Total Players</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <StatValue>{players.length}</StatValue>
+                <StatLabel>Active Members</StatLabel>
+              </CardContent>
+            </Card>
 
-          <Section>
-            <SectionTitle>Current Event</SectionTitle>
-            {currentEvent ? (
-              <ListItem>
-                <strong>{currentEvent.name}</strong><br />
-                Location: {currentEvent.location}<br />
-                Status: {currentEvent.status}<br />
-                Date: {new Date(currentEvent.date).toLocaleDateString()}
-              </ListItem>
-            ) : (
-              <ListItem>No current event</ListItem>
-            )}
-          </Section>
+            <Card>
+              <CardHeader>
+                <CardTitle>Current Event</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {currentEvent ? (
+                  <EventInfo>
+                    <EventDetail>
+                      <EventLabel>Event:</EventLabel>
+                      <EventValue>{currentEvent.name}</EventValue>
+                    </EventDetail>
+                    <EventDetail>
+                      <EventLabel>Location:</EventLabel>
+                      <EventValue>{currentEvent.location || 'TBD'}</EventValue>
+                    </EventDetail>
+                    <EventDetail>
+                      <EventLabel>Status:</EventLabel>
+                      <EventValue>{currentEvent.status}</EventValue>
+                    </EventDetail>
+                    <EventDetail>
+                      <EventLabel>Players:</EventLabel>
+                      <EventValue>{currentEvent.players.length}</EventValue>
+                    </EventDetail>
+                    <EventDetail>
+                      <EventLabel>Date:</EventLabel>
+                      <EventValue>{new Date(currentEvent.date).toLocaleDateString()}</EventValue>
+                    </EventDetail>
+                  </EventInfo>
+                ) : (
+                  <StatLabel>No active event</StatLabel>
+                )}
+              </CardContent>
+            </Card>
 
-          <Section>
-            <SectionTitle>Funds</SectionTitle>
-            <List>
-              <ListItem>Bank Transfer: £{funds.bankTransfer.toFixed(2)}</ListItem>
-              <ListItem>Cash: £{funds.cash.toFixed(2)}</ListItem>
-              <ListItem>Card: £{funds.card.toFixed(2)}</ListItem>
-              <FundsTotal>Total: £{totalFunds.toFixed(2)}</FundsTotal>
-            </List>
-          </Section>
+            <Card>
+              <CardHeader>
+                <CardTitle>Funds</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FundsList>
+                  <FundItem>
+                    <FundLabel>Bank Transfer</FundLabel>
+                    <FundAmount>£{funds.bankTransfer.toFixed(2)}</FundAmount>
+                  </FundItem>
+                  <FundItem>
+                    <FundLabel>Cash</FundLabel>
+                    <FundAmount>£{funds.cash.toFixed(2)}</FundAmount>
+                  </FundItem>
+                  <FundItem>
+                    <FundLabel>Card</FundLabel>
+                    <FundAmount>£{funds.card.toFixed(2)}</FundAmount>
+                  </FundItem>
+                  <FundItem>
+                    <FundLabel>Total</FundLabel>
+                    <FundAmount>£{totalFunds.toFixed(2)}</FundAmount>
+                  </FundItem>
+                </FundsList>
+              </CardContent>
+            </Card>
 
-          <Section>
-            <SectionTitle>Surplus Funds</SectionTitle>
-            <SurplusAmount>£{surplus.toFixed(2)}</SurplusAmount>
-          </Section>
+            <SurplusCard>
+              <SurplusHeader>
+                <SurplusTitle>Surplus Funds</SurplusTitle>
+              </SurplusHeader>
+              <CardContent>
+                <SurplusValue>£{surplus.toFixed(2)}</SurplusValue>
+                <StatLabel style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Available Balance</StatLabel>
+              </CardContent>
+            </SurplusCard>
 
-          <Section>
-            <SectionTitle>Notes</SectionTitle>
-            <NotesText>{notes}</NotesText>
-          </Section>
+            <NotesCard>
+              <CardHeader>
+                <CardTitle>Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <NotesText>{notes}</NotesText>
+              </CardContent>
+            </NotesCard>
+          </Grid>
         </Content>
       </DashboardContainer>
+      
+      <FloatingActionButton onClick={() => setEditSidebarOpen(true)}>
+        <PenTool size={20} />
+      </FloatingActionButton>
       
       <EditSidebar
         isOpen={editSidebarOpen}

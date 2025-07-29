@@ -207,28 +207,32 @@ const EditSidebar: React.FC<EditSidebarProps> = ({
         
         <SidebarContent>
           <Section>
-            <SectionTitle>Players</SectionTitle>
-            {players.map(player => (
-              <PlayerItem key={player.id}>
-                <span>{player.name}</span>
-                <Button 
-                  variant="danger" 
-                  onClick={() => handleRemovePlayer(player.id)}
-                >
-                  <Trash2 size={16} />
-                </Button>
-              </PlayerItem>
-            ))}
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <SectionTitle>Player Count</SectionTitle>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <Input
-                placeholder="New player name"
-                value={newPlayerName}
-                onChange={(e) => setNewPlayerName(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddPlayer()}
+                type="number"
+                placeholder="Number of players"
+                value={players.length}
+                onChange={(e) => {
+                  const count = Number(e.target.value) || 0;
+                  if (count >= 0) {
+                    const newPlayers = [...Array(count).keys()].map(i => ({
+                      id: Date.now().toString() + i,
+                      name: `Player ${i + 1}`,
+                      joinedDate: new Date().toISOString()
+                    }));
+                    setPlayers(newPlayers);
+                    if (currentEvent) {
+                      setCurrentEvent({
+                        ...currentEvent,
+                        players: newPlayers.map(p => p.id)
+                      });
+                    }
+                  }
+                }}
+                min="0"
               />
-              <Button onClick={handleAddPlayer}>
-                <Plus size={16} />
-              </Button>
+              <span style={{ color: '#6b7280', fontSize: '14px' }}>players</span>
             </div>
           </Section>
 
