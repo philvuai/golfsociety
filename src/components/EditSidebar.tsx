@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { X, Save, Plus, Trash2 } from 'lucide-react';
+import { X, Save } from 'lucide-react';
 import { Player, Event, Funds } from '../types';
 
 const SidebarOverlay = styled.div<{ isOpen: boolean }>`
@@ -117,15 +117,6 @@ const Button = styled.button<{ variant?: 'primary' | 'danger' }>`
   }
 `;
 
-const PlayerItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  margin-bottom: 10px;
-`;
 
 const SaveButton = styled(Button)`
   position: sticky;
@@ -165,23 +156,6 @@ const EditSidebar: React.FC<EditSidebarProps> = ({
   const [funds, setFunds] = useState<Funds>(initialFunds);
   const [surplus, setSurplus] = useState(initialSurplus);
   const [notes, setNotes] = useState(initialNotes);
-  const [newPlayerName, setNewPlayerName] = useState('');
-
-  const handleAddPlayer = () => {
-    if (newPlayerName.trim()) {
-      const newPlayer: Player = {
-        id: Date.now().toString(),
-        name: newPlayerName.trim(),
-        joinedDate: new Date().toISOString()
-      };
-      setPlayers([...players, newPlayer]);
-      setNewPlayerName('');
-    }
-  };
-
-  const handleRemovePlayer = (playerId: string) => {
-    setPlayers(players.filter(p => p.id !== playerId));
-  };
 
   const handleSave = () => {
     onSave({
@@ -216,7 +190,7 @@ const EditSidebar: React.FC<EditSidebarProps> = ({
                 onChange={(e) => {
                   const count = Number(e.target.value) || 0;
                   if (count >= 0) {
-                    const newPlayers = [...Array(count).keys()].map(i => ({
+                    const newPlayers = Array.from({ length: count }, (_, i) => ({
                       id: Date.now().toString() + i,
                       name: `Player ${i + 1}`,
                       joinedDate: new Date().toISOString()

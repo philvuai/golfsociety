@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Menu, LogOut, Plus, PenTool } from 'lucide-react';
+import { LogOut, Plus, PenTool } from 'lucide-react';
 import EditSidebar from './EditSidebar';
 import { Player, Event, Funds } from '../types';
 
