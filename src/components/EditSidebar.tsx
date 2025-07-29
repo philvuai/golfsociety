@@ -70,11 +70,6 @@ const SectionTitle = styled.h3`
   margin-bottom: 15px;
 `;
 
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-`;
 
 const Input = styled.input`
   padding: 12px;
