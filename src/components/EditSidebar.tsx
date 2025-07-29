@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { X, Save } from 'lucide-react';
-import { Player, Event, Funds } from '../types';
+import { Event } from '../types';
 
 const SidebarOverlay = styled.div<{ isOpen: boolean }>`
   position: fixed;
@@ -137,7 +137,7 @@ const EditSidebar: React.FC<EditSidebarProps> = ({
   event,
   onSave
 }) => {
-  const [eventData, setEventData] = useState<Event | null>(event);
+const [eventData, setEventData] = useState<Event | null>(event);
 
   // Update local state when event prop changes
   React.useEffect(() => {
@@ -147,6 +147,7 @@ const EditSidebar: React.FC<EditSidebarProps> = ({
   const handleSave = () => {
     if (eventData) {
       onSave(eventData);
+      onClose();
     }
   };
 
@@ -165,58 +166,51 @@ const EditSidebar: React.FC<EditSidebarProps> = ({
         
         <SidebarContent>
           <Section>
-            <SectionTitle>Player Count</SectionTitle>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <Input
-                type="number"
-                placeholder="Number of players"
-                value={players.length}
-                onChange={(e) => {
-                  const count = Number(e.target.value) || 0;
-                  if (count >= 0) {
-                    const newPlayers = Array.from({ length: count }, (_, i) => ({
-                      id: Date.now().toString() + i,
-                      name: `Player ${i + 1}`,
-                      joinedDate: new Date().toISOString()
-                    }));
-                    setPlayers(newPlayers);
-                    if (currentEvent) {
-                      setCurrentEvent({
-                        ...currentEvent,
-                        players: newPlayers.map(p => p.id)
-                      });
-                    }
-                  }
-                }}
-                min="0"
-              />
-              <span style={{ color: '#6b7280', fontSize: '14px' }}>players</span>
-            </div>
-          </Section>
-
-          <Section>
-            <SectionTitle>Current Event</SectionTitle>
+            <SectionTitle>Event Details</SectionTitle>
             <Input
               placeholder="Event name"
-              value={currentEvent?.name || ''}
-              onChange={(e) => setCurrentEvent(currentEvent ? 
-                { ...currentEvent, name: e.target.value } : 
-                {
-                  id: Date.now().toString(),
-                  name: e.target.value,
-                  date: new Date().toISOString(),
-                  location: '',
-                  status: 'upcoming',
-                  players: []
-                }
-              )}
+              value={eventData.name}
+              onChange={(e) => setEventData({ ...eventData, name: e.target.value })}
+              style={{ marginBottom: '10px' }}
+            />
+            <Input
+              type="date"
+              placeholder="Event date"
+              value={eventData.date ? eventData.date.split('T')[0] : ''}
+              onChange={(e) => setEventData({ ...eventData, date: new Date(e.target.value).toISOString() })}
+              style={{ marginBottom: '10px' }}
             />
             <Input
               placeholder="Event location"
-              value={currentEvent?.location || ''}
-              onChange={(e) => setCurrentEvent(currentEvent ? 
-                { ...currentEvent, location: e.target.value } : null
-              )}
+              value={eventData.location}
+              onChange={(e) => setEventData({ ...eventData, location: e.target.value })}
+              style={{ marginBottom: '10px' }}
+            />
+            <select
+              value={eventData.status}
+              onChange={(e) => setEventData({ ...eventData, status: e.target.value as 'upcoming' | 'in-progress' | 'completed' })}
+              style={{
+                padding: '12px',
+                border: '2px solid #e1e5e9',
+                borderRadius: '8px',
+                fontSize: '14px',
+                width: '100%'
+              }}
+            >
+              <option value="upcoming">Upcoming</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </Section>
+
+          <Section>
+            <SectionTitle>Player Count</SectionTitle>
+            <Input
+              type="number"
+              placeholder="Number of players"
+              value={eventData.playerCount}
+              onChange={(e) => setEventData({ ...eventData, playerCount: Number(e.target.value) || 0 })}
+              min="0"
             />
           </Section>
 
@@ -225,20 +219,31 @@ const EditSidebar: React.FC<EditSidebarProps> = ({
             <Input
               type="number"
               placeholder="Bank Transfer"
-              value={funds.bankTransfer}
-              onChange={(e) => setFunds({ ...funds, bankTransfer: Number(e.target.value) })}
+              value={eventData.funds.bankTransfer}
+              onChange={(e) => setEventData({ 
+                ...eventData, 
+                funds: { ...eventData.funds, bankTransfer: Number(e.target.value) || 0 }
+              })}
+              style={{ marginBottom: '10px' }}
             />
             <Input
               type="number"
               placeholder="Cash"
-              value={funds.cash}
-              onChange={(e) => setFunds({ ...funds, cash: Number(e.target.value) })}
+              value={eventData.funds.cash}
+              onChange={(e) => setEventData({ 
+                ...eventData, 
+                funds: { ...eventData.funds, cash: Number(e.target.value) || 0 }
+              })}
+              style={{ marginBottom: '10px' }}
             />
             <Input
               type="number"
               placeholder="Card"
-              value={funds.card}
-              onChange={(e) => setFunds({ ...funds, card: Number(e.target.value) })}
+              value={eventData.funds.card}
+              onChange={(e) => setEventData({ 
+                ...eventData, 
+                funds: { ...eventData.funds, card: Number(e.target.value) || 0 }
+              })}
             />
           </Section>
 
@@ -247,8 +252,8 @@ const EditSidebar: React.FC<EditSidebarProps> = ({
             <Input
               type="number"
               placeholder="Surplus amount"
-              value={surplus}
-              onChange={(e) => setSurplus(Number(e.target.value))}
+              value={eventData.surplus}
+              onChange={(e) => setEventData({ ...eventData, surplus: Number(e.target.value) || 0 })}
             />
           </Section>
 
@@ -256,8 +261,8 @@ const EditSidebar: React.FC<EditSidebarProps> = ({
             <SectionTitle>Notes</SectionTitle>
             <TextArea
               placeholder="Enter notes..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              value={eventData.notes}
+              onChange={(e) => setEventData({ ...eventData, notes: e.target.value })}
             />
           </Section>
 

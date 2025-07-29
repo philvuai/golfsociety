@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { LogOut, Plus, PenTool } from 'lucide-react';
 import EditSidebar from './EditSidebar';
-import { Player, Event, Funds } from '../types';
+import { Event } from '../types';
 
 const DashboardContainer = styled.div`
   display: flex;
