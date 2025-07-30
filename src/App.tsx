@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/NewDashboard';
 import { GlobalStyles } from './styles/GlobalStyles';
+import { apiService } from './services/api';
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -25,42 +26,28 @@ function App() {
     // Check for existing session
     const savedUser = localStorage.getItem('golf-society-user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      const user = JSON.parse(savedUser);
+      setUser(user);
+      apiService.setUser(user);
     }
     setLoading(false);
   }, []);
 
-  const handleLogin = (username: string, password: string) => {
-    // Simple authentication - in production, this would be handled by Netlify Identity
-    let newUser: User | null = null;
-    
-    if (username === 'admin' && password === 'golfsociety2024') {
-      newUser = {
-        id: '1',
-        username,
-        role: 'admin',
-        isAuthenticated: true
-      };
-    } else if (username === 'viewer' && password === 'viewonly2024') {
-      newUser = {
-        id: '2',
-        username,
-        role: 'viewer',
-        isAuthenticated: true
-      };
-    }
-    
-    if (newUser) {
-      setUser(newUser);
-      localStorage.setItem('golf-society-user', JSON.stringify(newUser));
+  const handleLogin = async (username: string, password: string) => {
+    try {
+      const user = await apiService.login(username, password);
+      setUser(user);
+      localStorage.setItem('golf-society-user', JSON.stringify(user));
       return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    
-    return false;
   };
 
   const handleLogout = () => {
     setUser(null);
+    apiService.setUser(null);
     localStorage.removeItem('golf-society-user');
   };
 

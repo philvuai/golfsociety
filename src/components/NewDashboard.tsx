@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { LogOut, Plus, PenTool, CheckCircle } from 'lucide-react';
 import EditSidebar from './EditSidebar';
 import { Event } from '../types';
 import { formatDateBritish } from '../utils/dateUtils';
+import { apiService } from '../services/api';
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -272,62 +273,46 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: '1',
-      name: 'Monthly Tournament',
-      date: new Date().toISOString(),
-      location: 'Hillside Golf Club',
-      status: 'in-progress',
-      players: ['1', '2', '3'],
-      playerCount: 3,
-      playerFee: 50.00,
-      courseFee: 45.00,
-      cashInBank: 1500.00,
-      funds: { bankTransfer: 1000, cash: 500, card: 250 },
-      surplus: 200,
-      notes: 'Tournament registration is now open. Please confirm your attendance by Friday.'
-    }
-  ]);
-  const [activeEventId, setActiveEventId] = useState<string>('1');
+  const [events, setEvents] = useState<Event[]>([]);
+  const [activeEventId, setActiveEventId] = useState<string | null>(null);
   const [editSidebarOpen, setEditSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const activeEvent = events.find(event => event.id === activeEventId) || events[0];
 
-  // Save data to localStorage whenever it changes
-  useEffect(() => {
-    const dashboardData = {
-      events,
-      activeEventId,
-      lastUpdated: new Date().toISOString()
-    };
-    localStorage.setItem('golf-society-dashboard', JSON.stringify(dashboardData));
-  }, [events, activeEventId]);
-
-  // Load data from localStorage on component mount
-  useEffect(() => {
-    const savedData = localStorage.getItem('golf-society-dashboard');
-    if (savedData) {
-      try {
-        const data = JSON.parse(savedData);
-        if (data.events && data.events.length > 0) {
-          setEvents(data.events);
-          setActiveEventId(data.activeEventId || data.events[0].id);
-        }
-      } catch (error) {
-        console.error('Error loading saved dashboard data:', error);
+  const fetchEvents = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const fetchedEvents = await apiService.getEvents();
+      setEvents(fetchedEvents);
+      if (fetchedEvents.length > 0) {
+        setActiveEventId(fetchedEvents[0].id);
       }
+    } catch (err) {
+      setError('Failed to load events. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  const handleSaveData = (updatedEvent: Event) => {
-    setEvents(events.map(event => event.id === updatedEvent.id ? updatedEvent : event));
-    setEditSidebarOpen(false);
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  const handleSaveData = async (updatedEvent: Event) => {
+    try {
+      const savedEvent = await apiService.updateEvent(updatedEvent);
+      setEvents(events.map(event => event.id === savedEvent.id ? savedEvent : event));
+      setEditSidebarOpen(false);
+    } catch (error) {
+      setError('Failed to save event. Please try again.');
+    }
   };
 
-  const handleNewEvent = () => {
-    const newEvent: Event = {
-      id: Date.now().toString(),
+  const handleNewEvent = async () => {
+    const newEventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'> = {
       name: 'New Event',
       date: new Date().toISOString(),
       location: '',
@@ -341,29 +326,41 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       surplus: 0,
       notes: ''
     };
-    setEvents([...events, newEvent]);
-    setActiveEventId(newEvent.id);
-    setEditSidebarOpen(true);
-  };
 
-  const handleDeleteEvent = (eventId: string) => {
-    setEvents(events.map(event => 
-      event.id === eventId ? { ...event, deletedAt: new Date().toISOString() } : event
-    ));
-    
-    // Switch to another event if the active one is deleted
-    if (activeEventId === eventId) {
-      const nextEvent = events.find(e => e.id !== eventId && !e.deletedAt);
-      setActiveEventId(nextEvent ? nextEvent.id : '1');
+    try {
+      const newEvent = await apiService.createEvent(newEventData);
+      setEvents([...events, newEvent]);
+      setActiveEventId(newEvent.id);
+      setEditSidebarOpen(true);
+    } catch (error) {
+      setError('Failed to create event. Please try again.');
     }
   };
 
-  const handleCompleteEvent = () => {
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      await apiService.deleteEvent(eventId);
+      setEvents(events.filter(event => event.id !== eventId));
+      if (activeEventId === eventId) {
+        const nextEvent = events.find(e => e.id !== eventId);
+        setActiveEventId(nextEvent ? nextEvent.id : null);
+      }
+    } catch (error) {
+      setError('Failed to delete event. Please try again.');
+    }
+  };
+
+  const handleCompleteEvent = async () => {
     if (activeEvent && activeEvent.status !== 'completed') {
-      const updatedEvent = { ...activeEvent, status: 'completed' as const };
-      setEvents(events.map(event => 
-        event.id === activeEvent.id ? updatedEvent : event
-      ));
+      try {
+        const updatedEvent = { ...activeEvent, status: 'completed' as const };
+        await apiService.updateEvent(updatedEvent);
+        setEvents(events.map(event => 
+          event.id === activeEvent.id ? updatedEvent : event
+        ));
+      } catch (error) {
+        setError('Failed to complete event. Please try again.');
+      }
     }
   };
 
