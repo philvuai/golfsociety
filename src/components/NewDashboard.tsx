@@ -530,15 +530,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
               <SurplusCard>
                 <SurplusHeader>
-                  <SurplusTitle>Surplus Funds</SurplusTitle>
+                  <SurplusTitle>Surplus Funds on the day</SurplusTitle>
                 </SurplusHeader>
                 <CardContent>
                   <SurplusValue>£{(() => {
-                    const totalIncome = activeEvent.funds.bankTransfer + activeEvent.funds.cash + activeEvent.funds.card;
-                    const totalCourseFees = activeEvent.playerCount * activeEvent.courseFee;
-                    return (totalIncome - totalCourseFees).toFixed(2);
+                    const playerIncome = (activeEvent.playerFee || 0) * activeEvent.playerCount;
+                    const courseFee = activeEvent.courseFee;
+                    return (playerIncome - courseFee).toFixed(2);
                   })()}</SurplusValue>
-                  <StatLabel style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Available Balance</StatLabel>
+                  <StatLabel style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Player Income - Course Fee</StatLabel>
                 </CardContent>
               </SurplusCard>
 
