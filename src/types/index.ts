@@ -16,6 +16,7 @@ export interface Event {
   funds: Funds;
   surplus: number;
   notes: string;
+  deletedAt?: string | null;
 }
 
 export interface Funds {

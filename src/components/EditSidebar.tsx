@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { X, Save } from 'lucide-react';
+import { X, Save, Trash2 } from 'lucide-react';
 import { Event } from '../types';
 
 const SidebarOverlay = styled.div<{ isOpen: boolean }>`
@@ -129,13 +129,15 @@ interface EditSidebarProps {
   onClose: () => void;
   event: Event | null;
   onSave: (event: Event) => void;
+  onDelete?: (eventId: string) => void;
 }
 
 const EditSidebar: React.FC<EditSidebarProps> = ({
   isOpen,
   onClose,
   event,
-  onSave
+  onSave,
+  onDelete
 }) => {
 const [eventData, setEventData] = useState<Event | null>(event);
 
@@ -147,6 +149,13 @@ const [eventData, setEventData] = useState<Event | null>(event);
   const handleSave = () => {
     if (eventData) {
       onSave(eventData);
+      onClose();
+    }
+  };
+
+  const handleDelete = () => {
+    if (eventData && onDelete && window.confirm('Are you sure you want to delete this event? It will be kept for 30 days before being permanently removed.')) {
+      onDelete(eventData.id);
       onClose();
     }
   };
@@ -220,50 +229,75 @@ const [eventData, setEventData] = useState<Event | null>(event);
 
           <Section>
             <SectionTitle>Funds</SectionTitle>
-            <Input
-              type="text"
-              placeholder="Bank Transfer"
-              value={eventData.funds.bankTransfer}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                  setEventData({ 
-                    ...eventData, 
-                    funds: { ...eventData.funds, bankTransfer: value === '' ? 0 : Number(value) }
-                  });
-                }
-              }}
-              style={{ marginBottom: '10px' }}
-            />
-            <Input
-              type="text"
-              placeholder="Cash"
-              value={eventData.funds.cash}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                  setEventData({ 
-                    ...eventData, 
-                    funds: { ...eventData.funds, cash: value === '' ? 0 : Number(value) }
-                  });
-                }
-              }}
-              style={{ marginBottom: '10px' }}
-            />
-            <Input
-              type="text"
-              placeholder="Card"
-              value={eventData.funds.card}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                  setEventData({ 
-                    ...eventData, 
-                    funds: { ...eventData.funds, card: value === '' ? 0 : Number(value) }
-                  });
-                }
-              }}
-            />
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
+              }}>Bank Transfer</label>
+              <Input
+                type="text"
+                placeholder="0.00"
+                value={eventData.funds.bankTransfer}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setEventData({ 
+                      ...eventData, 
+                      funds: { ...eventData.funds, bankTransfer: value === '' ? 0 : Number(value) }
+                    });
+                  }
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
+              }}>Cash</label>
+              <Input
+                type="text"
+                placeholder="0.00"
+                value={eventData.funds.cash}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setEventData({ 
+                      ...eventData, 
+                      funds: { ...eventData.funds, cash: value === '' ? 0 : Number(value) }
+                    });
+                  }
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
+              }}>Card</label>
+              <Input
+                type="text"
+                placeholder="0.00"
+                value={eventData.funds.card}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setEventData({ 
+                      ...eventData, 
+                      funds: { ...eventData.funds, card: value === '' ? 0 : Number(value) }
+                    });
+                  }
+                }}
+              />
+            </div>
           </Section>
 
           <Section>
@@ -290,6 +324,13 @@ const [eventData, setEventData] = useState<Event | null>(event);
             />
           </Section>
 
+          {onDelete && (
+            <Button variant="danger" onClick={handleDelete} style={{ marginBottom: '10px', width: '100%' }}>
+              <Trash2 size={16} />
+              Delete Event
+            </Button>
+          )}
+          
           <SaveButton variant="primary" onClick={handleSave}>
             <Save size={16} />
             Save Changes

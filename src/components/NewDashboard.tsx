@@ -315,6 +315,31 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     setEditSidebarOpen(true);
   };
 
+  const handleDeleteEvent = (eventId: string) => {
+    setEvents(events.map(event => 
+      event.id === eventId ? { ...event, deletedAt: new Date().toISOString() } : event
+    ));
+    
+    // Switch to another event if the active one is deleted
+    if (activeEventId === eventId) {
+      const nextEvent = events.find(e => e.id !== eventId && !e.deletedAt);
+      setActiveEventId(nextEvent ? nextEvent.id : '1');
+    }
+  };
+
+  // Clean up events older than 30 days
+  useEffect(() => {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    setEvents(prevEvents => 
+      prevEvents.filter(event => 
+        !event.deletedAt || new Date(event.deletedAt) > thirtyDaysAgo
+      )
+    );
+  }, []);
+
+  // Filter out deleted events for display
+  const visibleEvents = events.filter(event => !event.deletedAt);
+  
   const totalFunds = activeEvent ? 
     activeEvent.funds.bankTransfer + activeEvent.funds.cash + activeEvent.funds.card : 0;
 
@@ -326,7 +351,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           
           <EventsSection>
             <EventsSectionTitle>Events</EventsSectionTitle>
-            {events.map(event => (
+            {visibleEvents.map(event => (
               <SidebarButton 
                 key={event.id} 
                 active={event.id === activeEventId}
@@ -451,6 +476,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         onClose={() => setEditSidebarOpen(false)}
         event={activeEvent}
         onSave={handleSaveData}
+        onDelete={handleDeleteEvent}
       />
     </>
   );
