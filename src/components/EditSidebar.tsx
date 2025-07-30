@@ -213,37 +213,67 @@ const [eventData, setEventData] = useState<Event | null>(event);
           </Section>
 
           <Section>
-            <SectionTitle>Player Count</SectionTitle>
-            <Input
-              type="text"
-              placeholder="Number of players"
-              value={eventData.playerCount}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === '' || /^\d+$/.test(value)) {
-                  setEventData({ ...eventData, playerCount: value === '' ? 0 : Number(value) });
-                }
-              }}
-              style={{ marginBottom: '15px' }}
-            />
-            <label style={{ 
-              display: 'block', 
-              fontSize: '14px', 
-              fontWeight: '500', 
-              color: '#555', 
-              marginBottom: '5px' 
-            }}>Course Fee (per player)</label>
-            <Input
-              type="text"
-              placeholder="0.00"
-              value={eventData.courseFee}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                  setEventData({ ...eventData, courseFee: value === '' ? 0 : Number(value) });
-                }
-              }}
-            />
+            <SectionTitle>Player Information</SectionTitle>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
+              }}>Player Fee</label>
+              <Input
+                type="text"
+                placeholder="0.00"
+                value={eventData.playerFee || 0}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setEventData({ ...eventData, playerFee: value === '' ? 0 : Number(value) });
+                  }
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
+              }}>Total Players</label>
+              <Input
+                type="text"
+                placeholder="Number of players"
+                value={eventData.playerCount}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d+$/.test(value)) {
+                    setEventData({ ...eventData, playerCount: value === '' ? 0 : Number(value) });
+                  }
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
+              }}>Course Fee</label>
+              <Input
+                type="text"
+                placeholder="0.00"
+                value={eventData.courseFee}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setEventData({ ...eventData, courseFee: value === '' ? 0 : Number(value) });
+                  }
+                }}
+              />
+            </div>
           </Section>
 
           <Section>

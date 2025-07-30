@@ -280,6 +280,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       status: 'in-progress',
       players: ['1', '2', '3'],
       playerCount: 3,
+      playerFee: 50.00,
       courseFee: 45.00,
       funds: { bankTransfer: 1000, cash: 500, card: 250 },
       surplus: 200,
@@ -331,6 +332,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       status: 'upcoming',
       players: [],
       playerCount: 0,
+      playerFee: 0,
       courseFee: 0,
       funds: { bankTransfer: 0, cash: 0, card: 0 },
       surplus: 0,
@@ -446,12 +448,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 <CardContent>
                   <EventInfo>
                     <EventDetail>
-                      <EventLabel>Total Players:</EventLabel>
-                      <EventValue>{activeEvent.playerCount}</EventValue>
+                      <EventLabel>Player Fee:</EventLabel>
+                      <EventValue>£{(activeEvent.playerFee || 0).toFixed(2)}</EventValue>
                     </EventDetail>
                     <EventDetail>
-                      <EventLabel>Income from Players:</EventLabel>
-                      <EventValue>£{(activeEvent.funds.bankTransfer + activeEvent.funds.cash + activeEvent.funds.card).toFixed(2)}</EventValue>
+                      <EventLabel>Total Players:</EventLabel>
+                      <EventValue>{activeEvent.playerCount}</EventValue>
                     </EventDetail>
                     <EventDetail style={{ 
                       borderTop: '1px solid #e5e7eb', 
@@ -459,8 +461,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                       marginTop: '8px',
                       fontWeight: '600'
                     }}>
-                      <EventLabel style={{ fontWeight: '600' }}>Total Course Fees:</EventLabel>
-                      <EventValue style={{ fontSize: '18px', color: '#059669' }}>£{(activeEvent.playerCount * activeEvent.courseFee).toFixed(2)}</EventValue>
+                      <EventLabel style={{ fontWeight: '600' }}>Player Income:</EventLabel>
+                      <EventValue style={{ fontSize: '18px', color: '#059669' }}>£{((activeEvent.playerFee || 0) * activeEvent.playerCount).toFixed(2)}</EventValue>
+                    </EventDetail>
+                    <EventDetail>
+                      <EventLabel>Course Fee:</EventLabel>
+                      <EventValue>£{activeEvent.courseFee.toFixed(2)}</EventValue>
                     </EventDetail>
                   </EventInfo>
                 </CardContent>

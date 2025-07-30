@@ -13,6 +13,7 @@ export interface Event {
   status: 'upcoming' | 'in-progress' | 'completed';
   players: string[];
   playerCount: number;
+  playerFee: number;
   courseFee: number;
   funds: Funds;
   surplus: number;
