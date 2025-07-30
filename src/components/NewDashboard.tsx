@@ -450,8 +450,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                       <EventValue>{activeEvent.playerCount}</EventValue>
                     </EventDetail>
                     <EventDetail>
-                      <EventLabel>Course Fee (per player):</EventLabel>
-                      <EventValue>£{activeEvent.courseFee.toFixed(2)}</EventValue>
+                      <EventLabel>Income from Players:</EventLabel>
+                      <EventValue>£{(activeEvent.funds.bankTransfer + activeEvent.funds.cash + activeEvent.funds.card).toFixed(2)}</EventValue>
                     </EventDetail>
                     <EventDetail style={{ 
                       borderTop: '1px solid #e5e7eb', 
@@ -527,10 +527,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   <SurplusTitle>Surplus Funds</SurplusTitle>
                 </SurplusHeader>
                 <CardContent>
-                  <SurplusValue>£{activeEvent.surplus.toFixed(2)}</SurplusValue>
+                  <SurplusValue>£{(() => {
+                    const totalIncome = activeEvent.funds.bankTransfer + activeEvent.funds.cash + activeEvent.funds.card;
+                    const totalCourseFees = activeEvent.playerCount * activeEvent.courseFee;
+                    return (totalIncome - totalCourseFees).toFixed(2);
+                  })()}</SurplusValue>
                   <StatLabel style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Available Balance</StatLabel>
                 </CardContent>
               </SurplusCard>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Cash in Bank</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <StatValue>£{activeEvent.funds.bankTransfer.toFixed(2)}</StatValue>
+                  <StatLabel>Bank Transfer Funds</StatLabel>
+                </CardContent>
+              </Card>
 
               <NotesCard>
                 <CardHeader>
