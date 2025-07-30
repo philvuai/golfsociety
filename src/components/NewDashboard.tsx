@@ -219,6 +219,25 @@ const NotesText = styled.div`
   white-space: pre-wrap;
 `;
 
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 18px;
+  color: #6b7280;
+`;
+
+const ErrorContainer = styled.div`
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  color: #b91c1c;
+  font-size: 14px;
+`;
+
 const FloatingActionButton = styled.button`
   position: fixed;
   bottom: 24px;
@@ -441,7 +460,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             <Subtitle>{user.role === 'admin' ? 'Manage your golf events, players, and finances' : 'View golf events, players, and finances'}</Subtitle>
           </Header>
 
-          {activeEvent && (
+          {error && (
+            <ErrorContainer>
+              {error}
+            </ErrorContainer>
+          )}
+
+          {loading ? (
+            <LoadingContainer>
+              Loading events...
+            </LoadingContainer>
+          ) : activeEvent ? (
             <Grid>
               <Card>
                 <CardHeader>
@@ -563,7 +592,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </CardContent>
               </NotesCard>
             </Grid>
-          )}
+          ) : !loading && events.length === 0 ? (
+            <LoadingContainer>
+              No events found. {user.role === 'admin' ? 'Create your first event using the + button.' : 'Please contact an admin to create events.'}
+            </LoadingContainer>
+          ) : null}
         </Content>
       </DashboardContainer>
       

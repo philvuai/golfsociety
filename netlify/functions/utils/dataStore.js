@@ -1,9 +1,7 @@
-const fs = require('fs').promises;
-const path = require('path');
-
-// In production, this would typically use a proper database
-// For now, we'll use Netlify's persistent storage capabilities
-const DATA_FILE = '/tmp/golf-society-data.json';
+// For Netlify Functions, we'll use a simple in-memory store
+// In a production environment, you'd use a proper database like FaunaDB, Supabase, or Airtable
+// This approach stores data in memory and resets on function cold starts
+// which is fine for demonstration but should be upgraded for production use
 
 // Default data structure
 const DEFAULT_DATA = {
@@ -46,31 +44,22 @@ const DEFAULT_DATA = {
   lastUpdated: new Date().toISOString()
 };
 
-class DataStore {
-  async ensureDataFile() {
-    try {
-      await fs.access(DATA_FILE);
-    } catch (error) {
-      // File doesn't exist, create it with default data
-      await this.saveData(DEFAULT_DATA);
-    }
-  }
+// In-memory data store (resets on cold starts)
+// In production, replace this with a proper database
+let dataCache = null;
 
+class DataStore {
   async loadData() {
-    await this.ensureDataFile();
-    try {
-      const data = await fs.readFile(DATA_FILE, 'utf8');
-      return JSON.parse(data);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      return DEFAULT_DATA;
+    if (!dataCache) {
+      dataCache = JSON.parse(JSON.stringify(DEFAULT_DATA));
     }
+    return dataCache;
   }
 
   async saveData(data) {
     try {
       data.lastUpdated = new Date().toISOString();
-      await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2));
+      dataCache = data;
       return true;
     } catch (error) {
       console.error('Error saving data:', error);
