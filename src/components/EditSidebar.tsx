@@ -224,6 +224,25 @@ const [eventData, setEventData] = useState<Event | null>(event);
                   setEventData({ ...eventData, playerCount: value === '' ? 0 : Number(value) });
                 }
               }}
+              style={{ marginBottom: '15px' }}
+            />
+            <label style={{ 
+              display: 'block', 
+              fontSize: '14px', 
+              fontWeight: '500', 
+              color: '#555', 
+              marginBottom: '5px' 
+            }}>Course Fee (per player)</label>
+            <Input
+              type="text"
+              placeholder="0.00"
+              value={eventData.courseFee}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                  setEventData({ ...eventData, courseFee: value === '' ? 0 : Number(value) });
+                }
+              }}
             />
           </Section>
 

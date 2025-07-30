@@ -256,6 +256,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       status: 'in-progress',
       players: ['1', '2', '3'],
       playerCount: 3,
+      courseFee: 45.00,
       funds: { bankTransfer: 1000, cash: 500, card: 250 },
       surplus: 200,
       notes: 'Tournament registration is now open. Please confirm your attendance by Friday.'
@@ -306,6 +307,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       status: 'upcoming',
       players: [],
       playerCount: 0,
+      courseFee: 0,
       funds: { bankTransfer: 0, cash: 0, card: 0 },
       surplus: 0,
       notes: ''
@@ -406,11 +408,28 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             <Grid>
               <Card>
                 <CardHeader>
-                  <CardTitle>Total Players</CardTitle>
+                  <CardTitle>Player Information</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <StatValue>{activeEvent.playerCount}</StatValue>
-                  <StatLabel>Active Members</StatLabel>
+                  <EventInfo>
+                    <EventDetail>
+                      <EventLabel>Total Players:</EventLabel>
+                      <EventValue>{activeEvent.playerCount}</EventValue>
+                    </EventDetail>
+                    <EventDetail>
+                      <EventLabel>Course Fee (per player):</EventLabel>
+                      <EventValue>£{activeEvent.courseFee.toFixed(2)}</EventValue>
+                    </EventDetail>
+                    <EventDetail style={{ 
+                      borderTop: '1px solid #e5e7eb', 
+                      paddingTop: '12px', 
+                      marginTop: '8px',
+                      fontWeight: '600'
+                    }}>
+                      <EventLabel style={{ fontWeight: '600' }}>Total Course Fees:</EventLabel>
+                      <EventValue style={{ fontSize: '18px', color: '#059669' }}>£{(activeEvent.playerCount * activeEvent.courseFee).toFixed(2)}</EventValue>
+                    </EventDetail>
+                  </EventInfo>
                 </CardContent>
               </Card>
 
