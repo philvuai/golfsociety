@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { LogOut, Plus, PenTool } from 'lucide-react';
+import { LogOut, Plus, PenTool, CheckCircle } from 'lucide-react';
 import EditSidebar from './EditSidebar';
 import { Event } from '../types';
 
@@ -241,6 +241,30 @@ const FloatingActionButton = styled.button`
   }
 `;
 
+const CompleteEventButton = styled.button`
+  position: fixed;
+  bottom: 96px;
+  right: 24px;
+  background: #059669;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(5, 150, 105, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #047857;
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(5, 150, 105, 0.4);
+  }
+`;
+
 interface DashboardProps {
   user: { username: string; };
   onLogout: () => void;
@@ -326,6 +350,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     if (activeEventId === eventId) {
       const nextEvent = events.find(e => e.id !== eventId && !e.deletedAt);
       setActiveEventId(nextEvent ? nextEvent.id : '1');
+    }
+  };
+
+  const handleCompleteEvent = () => {
+    if (activeEvent && activeEvent.status !== 'completed') {
+      const updatedEvent = { ...activeEvent, status: 'completed' as const };
+      setEvents(events.map(event => 
+        event.id === activeEvent.id ? updatedEvent : event
+      ));
     }
   };
 
@@ -511,6 +544,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           )}
         </Content>
       </DashboardContainer>
+      
+      {activeEvent && (activeEvent.status === 'upcoming' || activeEvent.status === 'in-progress') && (
+        <CompleteEventButton 
+          onClick={handleCompleteEvent}
+          title="Mark Event as Complete"
+        >
+          <CheckCircle size={20} />
+        </CompleteEventButton>
+      )}
       
       <FloatingActionButton onClick={() => setEditSidebarOpen(true)}>
         <PenTool size={20} />
