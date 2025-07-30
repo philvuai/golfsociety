@@ -1,6 +1,7 @@
 
 
 const { Pool } = require('pg');
+const bcrypt = require('bcryptjs');
 
 // Initialize the connection pool
 const pool = new Pool({
@@ -65,6 +66,16 @@ async function initializeDatabase() {
 initializeDatabase();
 
 class DataStore {
+  // Password Hashing methods
+  async hashPassword(password) {
+    const salt = await bcrypt.genSalt(10);
+    return await bcrypt.hash(password, salt);
+  }
+
+  async comparePassword(password, hash) {
+    return await bcrypt.compare(password, hash);
+  }
+
   async getEvents() {
     const client = await pool.connect();
     try {
@@ -126,15 +137,35 @@ class DataStore {
   async authenticateUser(username, password) {
     const client = await pool.connect();
     try {
-      const result = await client.query('SELECT * FROM users WHERE username = $1 AND password_hash = $2', [username, password]);
+      // First get the user by username only
+      const result = await client.query('SELECT * FROM users WHERE username = $1', [username]);
       if (result.rows.length > 0) {
         const user = result.rows[0];
-        return {
-          id: user.id,
-          username: user.username,
-          role: user.role,
-          isAuthenticated: true
-        };
+        
+        // Check if password is already hashed (contains $2 prefix for bcrypt)
+        let isValidPassword = false;
+        if (user.password_hash.startsWith('$2')) {
+          // Password is hashed, use bcrypt compare
+          isValidPassword = await this.comparePassword(password, user.password_hash);
+        } else {
+          // Password is plain text (legacy), do direct comparison
+          isValidPassword = password === user.password_hash;
+          
+          // If valid, update to hashed password for future use
+          if (isValidPassword) {
+            const hashedPassword = await this.hashPassword(password);
+            await client.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hashedPassword, user.id]);
+          }
+        }
+        
+        if (isValidPassword) {
+          return {
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            isAuthenticated: true
+          };
+        }
       }
       return null;
     } finally {

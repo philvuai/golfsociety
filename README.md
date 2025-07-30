@@ -1,4 +1,56 @@
-# Getting Started with Create React App
+# Golf Society Admin Dashboard
+
+A React-based admin dashboard for managing golf society events with secure authentication and Neon PostgreSQL database integration.
+
+## 🔧 Setup Instructions
+
+### 1. Install Dependencies
+```bash
+npm install
+```
+
+### 2. Database Setup (Neon PostgreSQL)
+
+1. Create a new database on [Neon](https://neon.tech)
+2. Copy your connection string
+3. Run the setup script:
+   ```bash
+   node setup-database.js
+   ```
+4. Or manually create a `.env` file:
+   ```bash
+   cp .env.example .env
+   ```
+   Then edit `.env` and add your Neon database URL:
+   ```
+   NEON_DATABASE_URL=postgresql://username:password@hostname/database_name?sslmode=require
+   ```
+
+### 3. Authentication
+
+**Default Login Credentials:**
+- **Admin**: Username: `admin`, Password: `golfsociety2024`
+- **Viewer**: Username: `viewer`, Password: `viewonly2024`
+
+**Security Features:**
+- Passwords are automatically hashed using bcrypt on first login
+- Secure password storage in PostgreSQL
+- Role-based access control (admin/viewer)
+
+### 4. Environment Variables
+
+**For Local Development:**
+Create a `.env` file with:
+```
+NODE_ENV=development
+NEON_DATABASE_URL=your_neon_database_connection_string
+```
+
+**For Production (Netlify):**
+Add environment variables in your Netlify dashboard:
+- `NEON_DATABASE_URL`: Your Neon database connection string
+
+## 🚀 Development
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
