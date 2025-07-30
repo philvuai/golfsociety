@@ -1,167 +1,145 @@
-// Netlify Blob Storage for permanent data persistence
-// Using official Netlify Blobs API as per https://docs.netlify.com/build/data-and-storage/netlify-blobs/
-const { getStore } = require('@netlify/blobs');
 
-// Default data structure
-const DEFAULT_DATA = {
-  events: [
-    {
-      id: '1',
-      name: 'Monthly Tournament',
-      date: new Date().toISOString(),
-      location: 'Hillside Golf Club',
-      status: 'in-progress',
-      players: ['1', '2', '3'],
-      playerCount: 3,
-      playerFee: 50.00,
-      courseFee: 45.00,
-      cashInBank: 1500.00,
-      funds: { bankTransfer: 1000, cash: 500, card: 250 },
-      surplus: 200,
-      notes: 'Tournament registration is now open. Please confirm your attendance by Friday.',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      deletedAt: null
-    }
-  ],
-  users: [
-    {
-      id: '1',
-      username: 'admin',
-      passwordHash: 'golfsociety2024', // In production, this would be properly hashed
-      role: 'admin',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: '2',
-      username: 'viewer',
-      passwordHash: 'viewonly2024', // In production, this would be properly hashed
-      role: 'viewer',
-      createdAt: new Date().toISOString()
-    }
-  ],
-  lastUpdated: new Date().toISOString()
-};
 
-// Netlify Blob storage configuration
-const STORE_NAME = 'golf-society';
-const DATA_KEY = 'application-data';
+const { Pool } = require('pg');
+
+// Initialize the connection pool
+const pool = new Pool({
+  connectionString: process.env.NEON_DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+// SQL for creating tables if they don't exist
+const CREATE_TABLES_SQL = `
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS events (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    date TIMESTAMP WITH TIME ZONE,
+    location VARCHAR(255),
+    status VARCHAR(50),
+    player_count INTEGER,
+    player_fee NUMERIC(10, 2),
+    course_fee NUMERIC(10, 2),
+    cash_in_bank NUMERIC(10, 2),
+    funds JSONB,
+    surplus NUMERIC(10, 2),
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Seed initial data if users table is empty
+INSERT INTO users (username, password_hash, role)
+SELECT 'admin', 'golfsociety2024', 'admin'
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
+
+INSERT INTO users (username, password_hash, role)
+SELECT 'viewer', 'viewonly2024', 'viewer'
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'viewer');
+`;
+
+// Function to initialize the database
+async function initializeDatabase() {
+  try {
+    const client = await pool.connect();
+    await client.query(CREATE_TABLES_SQL);
+    client.release();
+    console.log('Database initialized successfully');
+  } catch (error) {
+    console.error('Error initializing database:', error);
+    throw error;
+  }
+}
+
+// Initialize the database when the application starts
+initializeDatabase();
 
 class DataStore {
-  constructor() {
-    // Get the blob store instance using official Netlify Blobs API
-    // Each site can have multiple stores (namespaces) for different data types
-    this.store = getStore(STORE_NAME);
-  }
-
-  async loadData() {
-    try {
-      // Get data from blob storage
-      const storedData = await this.store.get(DATA_KEY, { type: 'json' });
-      
-      if (storedData && storedData.events) {
-        return storedData;
-      }
-      
-      // If no data exists, initialize with default data
-      console.log('No existing data found, initializing with default data');
-      await this.saveData(DEFAULT_DATA);
-      return DEFAULT_DATA;
-    } catch (error) {
-      console.error('Error loading data from blob storage:', error);
-      // Initialize with default data if blob read fails
-      await this.saveData(DEFAULT_DATA);
-      return DEFAULT_DATA;
-    }
-  }
-
-  async saveData(data) {
-    try {
-      data.lastUpdated = new Date().toISOString();
-      
-      // Save data to blob storage as JSON
-      await this.store.set(DATA_KEY, data, {
-        metadata: {
-          lastUpdated: data.lastUpdated,
-          version: '1.0'
-        }
-      });
-      
-      console.log('Data successfully saved to blob storage');
-      return true;
-    } catch (error) {
-      console.error('Error saving data to blob storage:', error);
-      throw error;
-    }
-  }
-
   async getEvents() {
-    const data = await this.loadData();
-    return data.events.filter(event => !event.deletedAt);
+    const client = await pool.connect();
+    try {
+      const result = await client.query('SELECT * FROM events WHERE deleted_at IS NULL ORDER BY date DESC');
+      return result.rows;
+    } finally {
+      client.release();
+    }
   }
 
   async getEventById(id) {
-    const data = await this.loadData();
-    return data.events.find(event => event.id === id && !event.deletedAt);
+    const client = await pool.connect();
+    try {
+      const result = await client.query('SELECT * FROM events WHERE id = $1 AND deleted_at IS NULL', [id]);
+      return result.rows[0];
+    } finally {
+      client.release();
+    }
   }
 
   async createEvent(eventData) {
-    const data = await this.loadData();
-    const newEvent = {
-      ...eventData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      deletedAt: null
-    };
-    data.events.push(newEvent);
-    await this.saveData(data);
-    return newEvent;
+    const client = await pool.connect();
+    try {
+      const { name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes } = eventData;
+      const result = await client.query(
+        'INSERT INTO events (name, date, location, status, player_count, player_fee, course_fee, cash_in_bank, funds, surplus, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
+        [name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes]
+      );
+      return result.rows[0];
+    } finally {
+      client.release();
+    }
   }
 
   async updateEvent(id, updates) {
-    const data = await this.loadData();
-    const eventIndex = data.events.findIndex(event => event.id === id);
-    if (eventIndex === -1) {
-      throw new Error('Event not found');
+    const client = await pool.connect();
+    try {
+      const { name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes } = updates;
+      const result = await client.query(
+        'UPDATE events SET name = $1, date = $2, location = $3, status = $4, player_count = $5, player_fee = $6, course_fee = $7, cash_in_bank = $8, funds = $9, surplus = $10, notes = $11, updated_at = CURRENT_TIMESTAMP WHERE id = $12 AND deleted_at IS NULL RETURNING *',
+        [name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes, id]
+      );
+      return result.rows[0];
+    } finally {
+      client.release();
     }
-    
-    data.events[eventIndex] = {
-      ...data.events[eventIndex],
-      ...updates,
-      updatedAt: new Date().toISOString()
-    };
-    
-    await this.saveData(data);
-    return data.events[eventIndex];
   }
 
   async deleteEvent(id) {
-    const data = await this.loadData();
-    const eventIndex = data.events.findIndex(event => event.id === id);
-    if (eventIndex === -1) {
-      throw new Error('Event not found');
+    const client = await pool.connect();
+    try {
+      const result = await client.query('UPDATE events SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *', [id]);
+      return result.rows[0];
+    } finally {
+      client.release();
     }
-    
-    data.events[eventIndex].deletedAt = new Date().toISOString();
-    data.events[eventIndex].updatedAt = new Date().toISOString();
-    
-    await this.saveData(data);
-    return data.events[eventIndex];
   }
 
   async authenticateUser(username, password) {
-    const data = await this.loadData();
-    const user = data.users.find(u => u.username === username && u.passwordHash === password);
-    if (user) {
-      return {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        isAuthenticated: true
-      };
+    const client = await pool.connect();
+    try {
+      const result = await client.query('SELECT * FROM users WHERE username = $1 AND password_hash = $2', [username, password]);
+      if (result.rows.length > 0) {
+        const user = result.rows[0];
+        return {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          isAuthenticated: true
+        };
+      }
+      return null;
+    } finally {
+      client.release();
     }
-    return null;
   }
 }
 
