@@ -13,17 +13,23 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    // Get store instance according to Netlify Blobs documentation
     const store = getStore('test-store');
     
     if (event.httpMethod === 'POST') {
       // Test writing to blob storage
       const testData = {
         message: 'Hello from Netlify Blobs!',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        version: '1.0'
       };
       
-      await store.set('test-key', testData, {
-        metadata: { type: 'test' }
+      // Store JSON data directly - Netlify Blobs handles serialization
+      await store.set('test-key', JSON.stringify(testData), {
+        metadata: { 
+          type: 'test',
+          timestamp: new Date().toISOString()
+        }
       });
       
       return {

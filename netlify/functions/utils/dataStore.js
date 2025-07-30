@@ -1,4 +1,5 @@
 // Netlify Blob Storage for permanent data persistence
+// Using official Netlify Blobs API as per https://docs.netlify.com/build/data-and-storage/netlify-blobs/
 const { getStore } = require('@netlify/blobs');
 
 // Default data structure
@@ -48,7 +49,8 @@ const DATA_KEY = 'application-data';
 
 class DataStore {
   constructor() {
-    // Get the blob store instance
+    // Get the blob store instance using official Netlify Blobs API
+    // Each site can have multiple stores (namespaces) for different data types
     this.store = getStore(STORE_NAME);
   }
 
