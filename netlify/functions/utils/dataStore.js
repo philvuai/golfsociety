@@ -1,5 +1,5 @@
-// Simple persistent storage using function container global state
-// Data persists for the lifetime of the function container
+// Netlify Blob Storage for permanent data persistence
+const { getStore } = require('@netlify/blobs');
 
 // Default data structure
 const DEFAULT_DATA = {
@@ -42,34 +42,54 @@ const DEFAULT_DATA = {
   lastUpdated: new Date().toISOString()
 };
 
-// Simple persistent storage using global context
-// This maintains data across function invocations within the same container
-let globalDataCache = null;
-let lastSaveTime = 0;
-const SAVE_INTERVAL = 60000; // Save every minute if there are changes
+// Netlify Blob storage configuration
+const STORE_NAME = 'golf-society';
+const DATA_KEY = 'application-data';
 
 class DataStore {
   constructor() {
-    // Initialize with cached data or default data
-    if (!globalDataCache) {
-      globalDataCache = JSON.parse(JSON.stringify(DEFAULT_DATA));
-    }
+    // Get the blob store instance
+    this.store = getStore(STORE_NAME);
   }
 
   async loadData() {
-    // Return the global cache (which persists across function calls in the same container)
-    return globalDataCache;
+    try {
+      // Get data from blob storage
+      const storedData = await this.store.get(DATA_KEY, { type: 'json' });
+      
+      if (storedData && storedData.events) {
+        return storedData;
+      }
+      
+      // If no data exists, initialize with default data
+      console.log('No existing data found, initializing with default data');
+      await this.saveData(DEFAULT_DATA);
+      return DEFAULT_DATA;
+    } catch (error) {
+      console.error('Error loading data from blob storage:', error);
+      // Initialize with default data if blob read fails
+      await this.saveData(DEFAULT_DATA);
+      return DEFAULT_DATA;
+    }
   }
 
   async saveData(data) {
     try {
       data.lastUpdated = new Date().toISOString();
-      globalDataCache = data;
-      lastSaveTime = Date.now();
+      
+      // Save data to blob storage as JSON
+      await this.store.set(DATA_KEY, data, {
+        metadata: {
+          lastUpdated: data.lastUpdated,
+          version: '1.0'
+        }
+      });
+      
+      console.log('Data successfully saved to blob storage');
       return true;
     } catch (error) {
-      console.error('Error saving data:', error);
-      return false;
+      console.error('Error saving data to blob storage:', error);
+      throw error;
     }
   }
 

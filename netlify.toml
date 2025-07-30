@@ -6,9 +6,11 @@
 [build.environment]
   NODE_VERSION = "18"
 
-# Enable Netlify Blob storage
+# Configure functions to use Node.js 20 for full compatibility
 [functions]
-  included_files = ["netlify/functions/**"]
+  node_bundler = "esbuild"
+  [functions.environment]
+    NODE_VERSION = "20"
 
 [[redirects]]
   from = "/api/*"
