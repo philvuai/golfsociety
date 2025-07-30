@@ -13,6 +13,7 @@ const AppContainer = styled.div`
 interface User {
   id: string;
   username: string;
+  role: 'admin' | 'viewer';
   isAuthenticated: boolean;
 }
 
@@ -31,16 +32,30 @@ function App() {
 
   const handleLogin = (username: string, password: string) => {
     // Simple authentication - in production, this would be handled by Netlify Identity
+    let newUser: User | null = null;
+    
     if (username === 'admin' && password === 'golfsociety2024') {
-      const newUser: User = {
+      newUser = {
         id: '1',
         username,
+        role: 'admin',
         isAuthenticated: true
       };
+    } else if (username === 'viewer' && password === 'viewonly2024') {
+      newUser = {
+        id: '2',
+        username,
+        role: 'viewer',
+        isAuthenticated: true
+      };
+    }
+    
+    if (newUser) {
       setUser(newUser);
       localStorage.setItem('golf-society-user', JSON.stringify(newUser));
       return true;
     }
+    
     return false;
   };
 

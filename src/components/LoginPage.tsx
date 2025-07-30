@@ -97,6 +97,16 @@ const ErrorMessage = styled.div`
   font-size: 14px;
 `;
 
+const LoginInfo = styled.div`
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #495057;
+  line-height: 1.5;
+`;
+
 interface LoginPageProps {
   onLogin: (username: string, password: string) => boolean;
 }
@@ -129,8 +139,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <LoginCard>
         <Logo>
           <Title>The Golf Society</Title>
-          <Subtitle>Admin Dashboard</Subtitle>
+          <Subtitle>Dashboard Access</Subtitle>
         </Logo>
+        
+        <LoginInfo>
+          <strong>Login Options:</strong><br/>
+          • Admin: Full access to manage events<br/>
+          • Viewer: Read-only access to view events
+        </LoginInfo>
         
         <Form onSubmit={handleSubmit}>
           <InputGroup>

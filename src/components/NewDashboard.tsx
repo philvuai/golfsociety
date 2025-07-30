@@ -267,7 +267,7 @@ const CompleteEventButton = styled.button`
 `;
 
 interface DashboardProps {
-  user: { username: string; };
+  user: { username: string; role: 'admin' | 'viewer'; };
   onLogout: () => void;
 }
 
@@ -428,9 +428,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             ))}
           </EventsSection>
           
-          <SidebarButton onClick={handleNewEvent}>
-            <Plus size={18} /> New Event
-          </SidebarButton>
+          {user.role === 'admin' && (
+            <SidebarButton onClick={handleNewEvent}>
+              <Plus size={18} /> New Event
+            </SidebarButton>
+          )}
           <SidebarButton onClick={onLogout}>
             <LogOut size={18} /> Log Out
           </SidebarButton>
@@ -439,7 +441,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         <Content>
           <Header>
             <Title>The Golf Society Dashboard</Title>
-            <Subtitle>Manage your golf events, players, and finances</Subtitle>
+            <Subtitle>{user.role === 'admin' ? 'Manage your golf events, players, and finances' : 'View golf events, players, and finances'}</Subtitle>
           </Header>
 
           {activeEvent && (
@@ -568,7 +570,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         </Content>
       </DashboardContainer>
       
-      {activeEvent && (activeEvent.status === 'upcoming' || activeEvent.status === 'in-progress') && (
+      {user.role === 'admin' && activeEvent && (activeEvent.status === 'upcoming' || activeEvent.status === 'in-progress') && (
         <CompleteEventButton 
           onClick={handleCompleteEvent}
           title="Mark Event as Complete"
@@ -577,9 +579,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         </CompleteEventButton>
       )}
       
-      <FloatingActionButton onClick={() => setEditSidebarOpen(true)}>
-        <PenTool size={20} />
-      </FloatingActionButton>
+      {user.role === 'admin' && (
+        <FloatingActionButton onClick={() => setEditSidebarOpen(true)}>
+          <PenTool size={20} />
+        </FloatingActionButton>
+      )}
       
       <EditSidebar
         isOpen={editSidebarOpen}
