@@ -277,6 +277,21 @@ const [eventData, setEventData] = useState<Event | null>(event);
           </Section>
 
           <Section>
+            <SectionTitle>Cash in Bank</SectionTitle>
+            <Input
+              type="text"
+              placeholder="0.00"
+              value={eventData.cashInBank || 0}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                  setEventData({ ...eventData, cashInBank: value === '' ? 0 : Number(value) });
+                }
+              }}
+            />
+          </Section>
+
+          <Section>
             <SectionTitle>Funds</SectionTitle>
             <div style={{ marginBottom: '15px' }}>
               <label style={{ 

@@ -282,6 +282,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       playerCount: 3,
       playerFee: 50.00,
       courseFee: 45.00,
+      cashInBank: 1500.00,
       funds: { bankTransfer: 1000, cash: 500, card: 250 },
       surplus: 200,
       notes: 'Tournament registration is now open. Please confirm your attendance by Friday.'
@@ -334,6 +335,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       playerCount: 0,
       playerFee: 0,
       courseFee: 0,
+      cashInBank: 0,
       funds: { bankTransfer: 0, cash: 0, card: 0 },
       surplus: 0,
       notes: ''
@@ -547,8 +549,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   <CardTitle>Cash in Bank</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <StatValue>£{activeEvent.funds.bankTransfer.toFixed(2)}</StatValue>
-                  <StatLabel>Bank Transfer Funds</StatLabel>
+                  <StatValue>£{(activeEvent.cashInBank || 0).toFixed(2)}</StatValue>
+                  <StatLabel>as per {new Date(activeEvent.date).toLocaleDateString()}</StatLabel>
                 </CardContent>
               </Card>
 

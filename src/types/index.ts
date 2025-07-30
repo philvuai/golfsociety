@@ -15,6 +15,7 @@ export interface Event {
   playerCount: number;
   playerFee: number;
   courseFee: number;
+  cashInBank: number;
   funds: Funds;
   surplus: number;
   notes: string;
