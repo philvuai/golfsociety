@@ -6,6 +6,10 @@
 [build.environment]
   NODE_VERSION = "18"
 
+# Enable Netlify Blob storage
+[functions]
+  included_files = ["netlify/functions/**"]
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"

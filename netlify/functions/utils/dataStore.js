@@ -1,7 +1,6 @@
-// For Netlify Functions, we'll use a simple in-memory store
-// In a production environment, you'd use a proper database like FaunaDB, Supabase, or Airtable
-// This approach stores data in memory and resets on function cold starts
-// which is fine for demonstration but should be upgraded for production use
+// Using Netlify Blob storage for persistent data
+// This provides permanent, persistent storage that survives function cold starts
+const { getStore } = require('@netlify/blobs');
 
 // Default data structure
 const DEFAULT_DATA = {
@@ -44,25 +43,38 @@ const DEFAULT_DATA = {
   lastUpdated: new Date().toISOString()
 };
 
-// In-memory data store (resets on cold starts)
-// In production, replace this with a proper database
-let dataCache = null;
+// Blob storage configuration
+const BLOB_STORE_NAME = 'golf-society-data';
+const DATA_BLOB_KEY = 'application-data';
 
 class DataStore {
+  constructor() {
+    this.store = getStore(BLOB_STORE_NAME);
+  }
+
   async loadData() {
-    if (!dataCache) {
-      dataCache = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    try {
+      const storedData = await this.store.get(DATA_BLOB_KEY, { type: 'json' });
+      if (storedData) {
+        return storedData;
+      }
+      // If no data exists, initialize with default data
+      await this.saveData(DEFAULT_DATA);
+      return DEFAULT_DATA;
+    } catch (error) {
+      console.error('Error loading data from blob storage:', error);
+      // Fallback to default data if blob read fails
+      return DEFAULT_DATA;
     }
-    return dataCache;
   }
 
   async saveData(data) {
     try {
       data.lastUpdated = new Date().toISOString();
-      dataCache = data;
+      await this.store.set(DATA_BLOB_KEY, JSON.stringify(data));
       return true;
     } catch (error) {
-      console.error('Error saving data:', error);
+      console.error('Error saving data to blob storage:', error);
       return false;
     }
   }
