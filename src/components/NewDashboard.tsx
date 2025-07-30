@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { LogOut, Plus, PenTool, CheckCircle } from 'lucide-react';
 import EditSidebar from './EditSidebar';
 import { Event } from '../types';
+import { formatDateBritish } from '../utils/dateUtils';
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -498,7 +499,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     </EventDetail>
                     <EventDetail>
                       <EventLabel>Date:</EventLabel>
-                      <EventValue>{new Date(activeEvent.date).toLocaleDateString()}</EventValue>
+                      <EventValue>{formatDateBritish(activeEvent.date)}</EventValue>
                     </EventDetail>
                   </EventInfo>
                 </CardContent>
@@ -506,7 +507,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Funds</CardTitle>
+                  <CardTitle>Payments</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <FundsList>
@@ -550,7 +551,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </CardHeader>
                 <CardContent>
                   <StatValue>£{(activeEvent.cashInBank || 0).toFixed(2)}</StatValue>
-                  <StatLabel>as per {new Date(activeEvent.date).toLocaleDateString()}</StatLabel>
+                  <StatLabel>as per {formatDateBritish(activeEvent.date)}</StatLabel>
                 </CardContent>
               </Card>
 

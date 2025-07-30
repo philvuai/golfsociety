@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { X, Save, Trash2 } from 'lucide-react';
 import { Event } from '../types';
+import { formatDateBritish } from '../utils/dateUtils';
 
 const SidebarOverlay = styled.div<{ isOpen: boolean }>`
   position: fixed;
@@ -292,7 +293,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
           </Section>
 
           <Section>
-            <SectionTitle>Funds</SectionTitle>
+            <SectionTitle>Payments</SectionTitle>
             <div style={{ marginBottom: '15px' }}>
               <label style={{ 
                 display: 'block', 
