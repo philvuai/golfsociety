@@ -206,54 +206,78 @@ const [eventData, setEventData] = useState<Event | null>(event);
           <Section>
             <SectionTitle>Player Count</SectionTitle>
             <Input
-              type="number"
+              type="text"
               placeholder="Number of players"
               value={eventData.playerCount}
-              onChange={(e) => setEventData({ ...eventData, playerCount: Number(e.target.value) || 0 })}
-              min="0"
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d+$/.test(value)) {
+                  setEventData({ ...eventData, playerCount: value === '' ? 0 : Number(value) });
+                }
+              }}
             />
           </Section>
 
           <Section>
             <SectionTitle>Funds</SectionTitle>
             <Input
-              type="number"
+              type="text"
               placeholder="Bank Transfer"
               value={eventData.funds.bankTransfer}
-              onChange={(e) => setEventData({ 
-                ...eventData, 
-                funds: { ...eventData.funds, bankTransfer: Number(e.target.value) || 0 }
-              })}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                  setEventData({ 
+                    ...eventData, 
+                    funds: { ...eventData.funds, bankTransfer: value === '' ? 0 : Number(value) }
+                  });
+                }
+              }}
               style={{ marginBottom: '10px' }}
             />
             <Input
-              type="number"
+              type="text"
               placeholder="Cash"
               value={eventData.funds.cash}
-              onChange={(e) => setEventData({ 
-                ...eventData, 
-                funds: { ...eventData.funds, cash: Number(e.target.value) || 0 }
-              })}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                  setEventData({ 
+                    ...eventData, 
+                    funds: { ...eventData.funds, cash: value === '' ? 0 : Number(value) }
+                  });
+                }
+              }}
               style={{ marginBottom: '10px' }}
             />
             <Input
-              type="number"
+              type="text"
               placeholder="Card"
               value={eventData.funds.card}
-              onChange={(e) => setEventData({ 
-                ...eventData, 
-                funds: { ...eventData.funds, card: Number(e.target.value) || 0 }
-              })}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                  setEventData({ 
+                    ...eventData, 
+                    funds: { ...eventData.funds, card: value === '' ? 0 : Number(value) }
+                  });
+                }
+              }}
             />
           </Section>
 
           <Section>
             <SectionTitle>Surplus</SectionTitle>
             <Input
-              type="number"
+              type="text"
               placeholder="Surplus amount"
               value={eventData.surplus}
-              onChange={(e) => setEventData({ ...eventData, surplus: Number(e.target.value) || 0 })}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                  setEventData({ ...eventData, surplus: value === '' ? 0 : Number(value) });
+                }
+              }}
             />
           </Section>
 
