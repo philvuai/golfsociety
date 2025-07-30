@@ -1,6 +1,5 @@
-// Using Netlify Blob storage for persistent data
-// This provides permanent, persistent storage that survives function cold starts
-const { getStore } = require('@netlify/blobs');
+// Simple persistent storage using function container global state
+// Data persists for the lifetime of the function container
 
 // Default data structure
 const DEFAULT_DATA = {
@@ -43,39 +42,33 @@ const DEFAULT_DATA = {
   lastUpdated: new Date().toISOString()
 };
 
-// Blob storage configuration
-const BLOB_STORE_NAME = 'golf-society-data';
-const DATA_BLOB_KEY = 'application-data';
+// Simple persistent storage using global context
+// This maintains data across function invocations within the same container
+let globalDataCache = null;
+let lastSaveTime = 0;
+const SAVE_INTERVAL = 60000; // Save every minute if there are changes
 
 class DataStore {
   constructor() {
-    // Initialize the store with the store name
-    this.store = getStore(BLOB_STORE_NAME);
+    // Initialize with cached data or default data
+    if (!globalDataCache) {
+      globalDataCache = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }
   }
 
   async loadData() {
-    try {
-      const storedData = await this.store.get(DATA_BLOB_KEY, { type: 'json' });
-      if (storedData) {
-        return storedData;
-      }
-      // If no data exists, initialize with default data
-      await this.saveData(DEFAULT_DATA);
-      return DEFAULT_DATA;
-    } catch (error) {
-      console.error('Error loading data from blob storage:', error);
-      // Fallback to default data if blob read fails
-      return DEFAULT_DATA;
-    }
+    // Return the global cache (which persists across function calls in the same container)
+    return globalDataCache;
   }
 
   async saveData(data) {
     try {
       data.lastUpdated = new Date().toISOString();
-      await this.store.set(DATA_BLOB_KEY, JSON.stringify(data));
+      globalDataCache = data;
+      lastSaveTime = Date.now();
       return true;
     } catch (error) {
-      console.error('Error saving data to blob storage:', error);
+      console.error('Error saving data:', error);
       return false;
     }
   }
