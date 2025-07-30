@@ -4,7 +4,7 @@
   "description": "Netlify Functions for Golf Society Admin Dashboard",
   "main": "index.js",
   "dependencies": {
-    "@netlify/blobs": "^8.1.0",
+    "@netlify/blobs": "^8.0.0",
     "@netlify/functions": "^2.0.0"
   },
   "engines": {

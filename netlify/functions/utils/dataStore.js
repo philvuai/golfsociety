@@ -49,6 +49,7 @@ const DATA_BLOB_KEY = 'application-data';
 
 class DataStore {
   constructor() {
+    // Initialize the store with the store name
     this.store = getStore(BLOB_STORE_NAME);
   }
 
