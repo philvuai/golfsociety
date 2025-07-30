@@ -18,7 +18,7 @@ class ApiService {
     this.user = user;
   }
 
-  private getAuthHeaders() {
+  private getAuthHeaders(): Record<string, string> {
     if (!this.user) {
       return {};
     }
@@ -33,13 +33,20 @@ class ApiService {
   }
 
   private async makeRequest(url: string, options: RequestInit = {}) {
+    const authHeaders = this.getAuthHeaders();
+    const baseHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...authHeaders,
+    };
+    
+    const finalHeaders = {
+      ...baseHeaders,
+      ...(options.headers as Record<string, string> || {}),
+    };
+
     const response = await fetch(`${API_BASE}${url}`, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.getAuthHeaders(),
-        ...options.headers,
-      },
+      headers: finalHeaders,
     });
 
     if (!response.ok) {
