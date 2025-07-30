@@ -108,7 +108,7 @@ const LoginInfo = styled.div`
 `;
 
 interface LoginPageProps {
-  onLogin: (username: string, password: string) => boolean;
+  onLogin: (username: string, password: string) => Promise<boolean>;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
@@ -123,7 +123,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     setLoading(true);
 
     try {
-      const success = onLogin(username, password);
+      const success = await onLogin(username, password);
       if (!success) {
         setError('Invalid username or password');
       }
