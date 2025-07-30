@@ -350,8 +350,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           <SidebarTitle>Welcome, {user.username}</SidebarTitle>
           
           <EventsSection>
-            <EventsSectionTitle>Events</EventsSectionTitle>
-            {visibleEvents.map(event => (
+            <EventsSectionTitle>In Progress</EventsSectionTitle>
+            {visibleEvents.filter(e => e.status === 'in-progress').map(event => (
+              <SidebarButton 
+                key={event.id} 
+                active={event.id === activeEventId}
+                onClick={() => setActiveEventId(event.id)}
+              >
+                {event.name}
+              </SidebarButton>
+            ))}
+          </EventsSection>
+
+          <EventsSection>
+            <EventsSectionTitle>Upcoming</EventsSectionTitle>
+            {visibleEvents.filter(e => e.status === 'upcoming').map(event => (
+              <SidebarButton 
+                key={event.id} 
+                active={event.id === activeEventId}
+                onClick={() => setActiveEventId(event.id)}
+              >
+                {event.name}
+              </SidebarButton>
+            ))}
+          </EventsSection>
+
+          <EventsSection>
+            <EventsSectionTitle>Completed</EventsSectionTitle>
+            {visibleEvents.filter(e => e.status === 'completed').map(event => (
               <SidebarButton 
                 key={event.id} 
                 active={event.id === activeEventId}
