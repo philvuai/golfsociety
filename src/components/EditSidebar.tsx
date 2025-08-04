@@ -146,6 +146,20 @@ const [eventData, setEventData] = useState<Event | null>(event);
     setEventData(event);
   }, [event]);
 
+  // Auto-calculate surplus whenever playerFee, playerCount, or courseFee changes
+  React.useEffect(() => {
+    if (eventData) {
+      const playerIncome = (eventData.playerFee || 0) * (eventData.playerCount || 0);
+      const courseFee = eventData.courseFee || 0;
+      const calculatedSurplus = playerIncome - courseFee;
+      
+      // Only update if the calculated surplus is different from the current one
+      if (Math.abs(calculatedSurplus - (eventData.surplus || 0)) > 0.001) {
+        setEventData(prev => prev ? { ...prev, surplus: calculatedSurplus } : null);
+      }
+    }
+  }, [eventData?.playerFee, eventData?.playerCount, eventData?.courseFee]);
+
   const handleSave = () => {
     if (eventData) {
       onSave(eventData);
