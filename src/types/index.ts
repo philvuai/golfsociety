@@ -14,12 +14,16 @@ export interface Event {
   players: string[];
   playerCount: number;
   playerFee: number;
+  playerCount2: number;
+  playerFee2: number;
   courseFee: number;
   cashInBank: number;
   funds: Funds;
   surplus: number;
   notes: string;
-  deletedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string;
 }
 
 export interface Funds {
