@@ -1,12 +1,23 @@
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-// Initialize the connection pool
+// Check if database URL is provided
+if (!process.env.NEON_DATABASE_URL) {
+  console.error('❌ NEON_DATABASE_URL environment variable is not set');
+  console.log('Please set NEON_DATABASE_URL in your environment variables');
+  console.log('Example: postgresql://username:password@hostname/database_name?sslmode=require');
+}
+
+// Initialize the connection pool with better error handling
+// Neon requires SSL connections
 const pool = new Pool({
   connectionString: process.env.NEON_DATABASE_URL,
-  ssl: {
+  ssl: process.env.NEON_DATABASE_URL ? {
     rejectUnauthorized: false
-  }
+  } : false,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 });
 
 // SQL for creating tables if they don't exist
@@ -56,15 +67,41 @@ class DataStore {
   async ensureDbInitialized() {
     if (!this.dbInitialized) {
       try {
+        if (!process.env.NEON_DATABASE_URL) {
+          throw new Error('NEON_DATABASE_URL environment variable is not configured');
+        }
+        
+        console.log('🔌 Connecting to Neon database...');
         const client = await pool.connect();
+        
+        // Test the connection
+        await client.query('SELECT NOW()');
+        console.log('✅ Database connection successful');
+        
+        // Initialize tables
+        console.log('📋 Creating tables if they don\'t exist...');
         await client.query(CREATE_TABLES_SQL);
+        
         client.release();
-        console.log('Database initialized successfully');
+        console.log('✅ Database initialized successfully');
         this.dbInitialized = true;
       } catch (error) {
-        console.error('Error initializing database:', error);
-        // Don't throw error, just log it and mark as initialized to avoid retries
+        console.error('❌ Error initializing database:', error.message);
+        
+        // Provide specific error messages for common issues
+        if (error.code === 'ENOTFOUND') {
+          console.error('🌐 Network error: Could not resolve database hostname');
+        } else if (error.code === 'ECONNREFUSED') {
+          console.error('🔌 Connection refused: Database server is not accessible');
+        } else if (error.code === '28P01') {
+          console.error('🔐 Authentication failed: Invalid username or password');
+        } else if (error.code === '3D000') {
+          console.error('🗃️ Database does not exist');
+        }
+        
+        // Still mark as initialized to prevent infinite retries, but throw error
         this.dbInitialized = true;
+        throw error;
       }
     }
   }
@@ -90,6 +127,7 @@ class DataStore {
   }
 
   async getEventById(id) {
+    await this.ensureDbInitialized();
     const client = await pool.connect();
     try {
       const result = await client.query('SELECT * FROM events WHERE id = $1 AND deleted_at IS NULL', [id]);
@@ -100,6 +138,7 @@ class DataStore {
   }
 
   async createEvent(eventData) {
+    await this.ensureDbInitialized();
     const client = await pool.connect();
     try {
       const { name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes } = eventData;
@@ -114,6 +153,7 @@ class DataStore {
   }
 
   async updateEvent(id, updates) {
+    await this.ensureDbInitialized();
     const client = await pool.connect();
     try {
       const { name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes } = updates;
@@ -128,6 +168,7 @@ class DataStore {
   }
 
   async deleteEvent(id) {
+    await this.ensureDbInitialized();
     const client = await pool.connect();
     try {
       const result = await client.query('UPDATE events SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *', [id]);
@@ -138,6 +179,7 @@ class DataStore {
   }
 
   async authenticateUser(username, password) {
+    await this.ensureDbInitialized();
     const client = await pool.connect();
     try {
       // First get the user by username only
