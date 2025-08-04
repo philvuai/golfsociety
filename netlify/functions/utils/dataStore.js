@@ -11,43 +11,6 @@ if (!process.env.NETLIFY_DATABASE_URL) {
 // Initialize Netlify Neon connection
 const sql = neon(); // automatically uses env NETLIFY_DATABASE_URL
 
-// SQL for creating tables if they don't exist
-const CREATE_TABLES_SQL = `
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS events (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    date TIMESTAMP WITH TIME ZONE,
-    location VARCHAR(255),
-    status VARCHAR(50),
-    player_count INTEGER,
-    player_fee NUMERIC(10, 2),
-    course_fee NUMERIC(10, 2),
-    cash_in_bank NUMERIC(10, 2),
-    funds JSONB,
-    surplus NUMERIC(10, 2),
-    notes TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP WITH TIME ZONE
-);
-
--- Seed initial data if users table is empty
-INSERT INTO users (username, password_hash, role)
-SELECT 'admin', 'golfsociety2024', 'admin'
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
-
-INSERT INTO users (username, password_hash, role)
-SELECT 'viewer', 'viewonly2024', 'viewer'
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'viewer');
-`;
 
 class DataStore {
   constructor() {
@@ -163,25 +126,37 @@ class DataStore {
   async createEvent(eventData) {
     await this.ensureDbInitialized();
     const { name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes } = eventData;
+    console.log('Creating event with data:', eventData);
+    
+    // Ensure funds is properly serialized as JSON
+    const fundsJson = JSON.stringify(funds || { bankTransfer: 0, cash: 0, card: 0 });
+    
     const result = await sql`
       INSERT INTO events (name, date, location, status, player_count, player_fee, course_fee, cash_in_bank, funds, surplus, notes) 
-      VALUES (${name}, ${date}, ${location}, ${status}, ${playerCount}, ${playerFee}, ${courseFee}, ${cashInBank}, ${funds}, ${surplus}, ${notes}) 
+      VALUES (${name}, ${date}, ${location}, ${status}, ${playerCount || 0}, ${playerFee || 0}, ${courseFee || 0}, ${cashInBank || 0}, ${fundsJson}, ${surplus || 0}, ${notes || ''}) 
       RETURNING *
     `;
+    console.log('Event created successfully:', result[0]);
     return result[0];
   }
 
   async updateEvent(id, updates) {
     await this.ensureDbInitialized();
     const { name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes } = updates;
+    console.log('Updating event with data:', updates);
+    
+    // Ensure funds is properly serialized as JSON
+    const fundsJson = JSON.stringify(funds || { bankTransfer: 0, cash: 0, card: 0 });
+    
     const result = await sql`
       UPDATE events 
-      SET name = ${name}, date = ${date}, location = ${location}, status = ${status}, player_count = ${playerCount}, 
-          player_fee = ${playerFee}, course_fee = ${courseFee}, cash_in_bank = ${cashInBank}, funds = ${funds}, 
-          surplus = ${surplus}, notes = ${notes}, updated_at = CURRENT_TIMESTAMP 
+      SET name = ${name}, date = ${date}, location = ${location}, status = ${status}, player_count = ${playerCount || 0}, 
+          player_fee = ${playerFee || 0}, course_fee = ${courseFee || 0}, cash_in_bank = ${cashInBank || 0}, funds = ${fundsJson}, 
+          surplus = ${surplus || 0}, notes = ${notes || ''}, updated_at = CURRENT_TIMESTAMP 
       WHERE id = ${id} AND deleted_at IS NULL 
       RETURNING *
     `;
+    console.log('Event updated successfully:', result[0]);
     return result[0];
   }
 

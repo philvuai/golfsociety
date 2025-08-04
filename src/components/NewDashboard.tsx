@@ -592,8 +592,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </SurplusHeader>
                 <CardContent>
                   <SurplusValue>£{(() => {
-                    const playerIncome = (activeEvent.playerFee || 0) * activeEvent.playerCount;
-                    const courseFee = activeEvent.courseFee || 0;
+                    const playerIncome = (activeEvent?.playerFee || 0) * (activeEvent?.playerCount || 0);
+                    const courseFee = activeEvent?.courseFee || 0;
                     return (playerIncome - courseFee).toFixed(2);
                   })()}</SurplusValue>
                   <StatLabel style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Player Income - Course Fee</StatLabel>
