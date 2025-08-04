@@ -291,6 +291,32 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
+// Helper function to safely convert values to numbers
+const safeNumber = (value: any): number => {
+  if (value === null || value === undefined || value === '') return 0;
+  const num = parseFloat(value);
+  return isNaN(num) ? 0 : num;
+};
+
+// Helper function to normalize event data
+const normalizeEvent = (event: any): Event => {
+  if (!event) return null;
+  
+  return {
+    ...event,
+    playerFee: safeNumber(event.playerFee),
+    courseFee: safeNumber(event.courseFee),
+    cashInBank: safeNumber(event.cashInBank),
+    surplus: safeNumber(event.surplus),
+    playerCount: safeNumber(event.playerCount),
+    funds: {
+      bankTransfer: safeNumber(event.funds?.bankTransfer),
+      cash: safeNumber(event.funds?.cash),
+      card: safeNumber(event.funds?.card)
+    }
+  };
+};
+
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [activeEventId, setActiveEventId] = useState<string | null>(null);
@@ -298,7 +324,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const activeEvent = events.find(event => event.id === activeEventId) || events[0];
+  const rawActiveEvent = events.find(event => event.id === activeEventId) || events[0];
+  const activeEvent = normalizeEvent(rawActiveEvent);
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
@@ -396,8 +423,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   // Filter out deleted events for display
   const visibleEvents = events.filter(event => !event.deletedAt);
   
-  const totalFunds = activeEvent ? 
-    (activeEvent.funds?.bankTransfer || 0) + (activeEvent.funds?.cash || 0) + (activeEvent.funds?.card || 0) : 0;
+  const totalFunds = (activeEvent && activeEvent.funds) ? 
+    (activeEvent.funds.bankTransfer || 0) + (activeEvent.funds.cash || 0) + (activeEvent.funds.card || 0) : 0;
 
   return (
     <>
@@ -470,7 +497,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             <LoadingContainer>
               Loading events...
             </LoadingContainer>
-          ) : activeEvent ? (
+          ) : activeEvent && activeEvent.id ? (
             <Grid>
               <Card>
                 <CardHeader>
@@ -480,11 +507,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   <EventInfo>
                     <EventDetail>
                       <EventLabel>Player Fee:</EventLabel>
-                      <EventValue>£{(activeEvent.playerFee || 0).toFixed(2)}</EventValue>
+                      <EventValue>£{(activeEvent?.playerFee || 0).toFixed(2)}</EventValue>
                     </EventDetail>
                     <EventDetail>
                       <EventLabel>Total Players:</EventLabel>
-                      <EventValue>{activeEvent.playerCount}</EventValue>
+                      <EventValue>{activeEvent?.playerCount || 0}</EventValue>
                     </EventDetail>
                     <EventDetail style={{ 
                       borderTop: '1px solid #e5e7eb', 
@@ -493,11 +520,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                       fontWeight: '600'
                     }}>
                       <EventLabel style={{ fontWeight: '600' }}>Player Income:</EventLabel>
-                      <EventValue style={{ fontSize: '18px', color: '#059669' }}>£{((activeEvent.playerFee || 0) * activeEvent.playerCount).toFixed(2)}</EventValue>
+                      <EventValue style={{ fontSize: '18px', color: '#059669' }}>£{((activeEvent?.playerFee || 0) * (activeEvent?.playerCount || 0)).toFixed(2)}</EventValue>
                     </EventDetail>
                     <EventDetail>
                       <EventLabel>Course Fee:</EventLabel>
-                      <EventValue>£{(activeEvent.courseFee || 0).toFixed(2)}</EventValue>
+                      <EventValue>£{(activeEvent?.courseFee || 0).toFixed(2)}</EventValue>
                     </EventDetail>
                   </EventInfo>
                 </CardContent>
