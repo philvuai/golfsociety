@@ -14,8 +14,6 @@ export interface Event {
   players: string[];
   playerCount: number;
   playerFee: number;
-  playerCount2?: number;
-  playerFee2?: number;
   courseFee: number;
   cashInBank: number;
   funds: Funds;

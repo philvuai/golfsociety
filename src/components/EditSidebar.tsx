@@ -221,7 +221,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
                 fontWeight: '500', 
                 color: '#555', 
                 marginBottom: '5px' 
-              }}>Primary Player Fee</label>
+              }}>Player Fee</label>
               <Input
                 type="text"
                 placeholder="0.00"
@@ -241,7 +241,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
                 fontWeight: '500', 
                 color: '#555', 
                 marginBottom: '5px' 
-              }}>Primary Total Players</label>
+              }}>Total Players</label>
               <Input
                 type="text"
                 placeholder="Number of players"
@@ -250,46 +250,6 @@ const [eventData, setEventData] = useState<Event | null>(event);
                   const value = e.target.value;
                   if (value === '' || /^\d+$/.test(value)) {
                     setEventData({ ...eventData, playerCount: value === '' ? 0 : Number(value) });
-                  }
-                }}
-              />
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ 
-                display: 'block', 
-                fontSize: '14px', 
-                fontWeight: '500', 
-                color: '#555', 
-                marginBottom: '5px' 
-              }}>Secondary Player Fee</label>
-              <Input
-                type="text"
-                placeholder="0.00"
-                value={eventData.playerFee2 || 0}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                    setEventData({ ...eventData, playerFee2: value === '' ? 0 : Number(value) });
-                  }
-                }}
-              />
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ 
-                display: 'block', 
-                fontSize: '14px', 
-                fontWeight: '500', 
-                color: '#555', 
-                marginBottom: '5px' 
-              }}>Secondary Total Players</label>
-              <Input
-                type="text"
-                placeholder="Number of players"
-                value={eventData.playerCount2 || 0}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '' || /^\d+$/.test(value)) {
-                    setEventData({ ...eventData, playerCount2: value === '' ? 0 : Number(value) });
                   }
                 }}
               />
