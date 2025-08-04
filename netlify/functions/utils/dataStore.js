@@ -72,7 +72,9 @@ class DataStore {
         await sql`
           ALTER TABLE events 
           ADD COLUMN IF NOT EXISTS player_count_2 INTEGER DEFAULT 0,
-          ADD COLUMN IF NOT EXISTS player_fee_2 NUMERIC(10, 2) DEFAULT 0
+          ADD COLUMN IF NOT EXISTS player_fee_2 NUMERIC(10, 2) DEFAULT 0,
+          ADD COLUMN IF NOT EXISTS player_group_1_name VARCHAR(255) DEFAULT 'Members',
+          ADD COLUMN IF NOT EXISTS player_group_2_name VARCHAR(255) DEFAULT 'Guests'
         `;
         
         // Seed initial users
@@ -145,8 +147,10 @@ class DataStore {
       players: [], // Not stored in DB currently
       playerCount: Number(dbEvent.player_count) || 0,
       playerFee: Number(dbEvent.player_fee) || 0,
+      playerGroup1Name: dbEvent.player_group_1_name || 'Members',
       playerCount2: Number(dbEvent.player_count_2) || 0,
       playerFee2: Number(dbEvent.player_fee_2) || 0,
+      playerGroup2Name: dbEvent.player_group_2_name || 'Guests',
       courseFee: Number(dbEvent.course_fee) || 0,
       cashInBank: Number(dbEvent.cash_in_bank) || 0,
       funds: funds,
@@ -173,13 +177,13 @@ class DataStore {
 
   async createEvent(eventData) {
     await this.ensureDbInitialized();
-    const { name, date, location, status, playerCount, playerFee, playerCount2, playerFee2, courseFee, cashInBank, funds, surplus, notes } = eventData;
+    const { name, date, location, status, playerCount, playerFee, playerGroup1Name, playerCount2, playerFee2, playerGroup2Name, courseFee, cashInBank, funds, surplus, notes } = eventData;
     // Ensure funds is properly serialized as JSON
     const fundsJson = JSON.stringify(funds || { bankTransfer: 0, cash: 0, card: 0 });
     
     const result = await sql`
-      INSERT INTO events (name, date, location, status, player_count, player_fee, player_count_2, player_fee_2, course_fee, cash_in_bank, funds, surplus, notes) 
-      VALUES (${name}, ${date}, ${location}, ${status}, ${playerCount || 0}, ${playerFee || 0}, ${playerCount2 || 0}, ${playerFee2 || 0}, ${courseFee || 0}, ${cashInBank || 0}, ${fundsJson}, ${surplus || 0}, ${notes || ''}) 
+      INSERT INTO events (name, date, location, status, player_count, player_fee, player_group_1_name, player_count_2, player_fee_2, player_group_2_name, course_fee, cash_in_bank, funds, surplus, notes) 
+      VALUES (${name}, ${date}, ${location}, ${status}, ${playerCount || 0}, ${playerFee || 0}, ${playerGroup1Name || 'Members'}, ${playerCount2 || 0}, ${playerFee2 || 0}, ${playerGroup2Name || 'Guests'}, ${courseFee || 0}, ${cashInBank || 0}, ${fundsJson}, ${surplus || 0}, ${notes || ''}) 
       RETURNING *
     `;
     return this.mapDbEventToFrontend(result[0]);
@@ -187,15 +191,15 @@ class DataStore {
 
   async updateEvent(id, updates) {
     await this.ensureDbInitialized();
-    const { name, date, location, status, playerCount, playerFee, playerCount2, playerFee2, courseFee, cashInBank, funds, surplus, notes } = updates;
+    const { name, date, location, status, playerCount, playerFee, playerGroup1Name, playerCount2, playerFee2, playerGroup2Name, courseFee, cashInBank, funds, surplus, notes } = updates;
     // Ensure funds is properly serialized as JSON
     const fundsJson = JSON.stringify(funds || { bankTransfer: 0, cash: 0, card: 0 });
     
     const result = await sql`
       UPDATE events 
       SET name = ${name}, date = ${date}, location = ${location}, status = ${status}, player_count = ${playerCount || 0}, 
-          player_fee = ${playerFee || 0}, player_count_2 = ${playerCount2 || 0}, player_fee_2 = ${playerFee2 || 0}, 
-          course_fee = ${courseFee || 0}, cash_in_bank = ${cashInBank || 0}, funds = ${fundsJson}, 
+          player_fee = ${playerFee || 0}, player_group_1_name = ${playerGroup1Name || 'Members'}, player_count_2 = ${playerCount2 || 0}, player_fee_2 = ${playerFee2 || 0}, 
+          player_group_2_name = ${playerGroup2Name || 'Guests'}, course_fee = ${courseFee || 0}, cash_in_bank = ${cashInBank || 0}, funds = ${fundsJson}, 
           surplus = ${surplus || 0}, notes = ${notes || ''}, updated_at = CURRENT_TIMESTAMP 
       WHERE id = ${id} AND deleted_at IS NULL 
       RETURNING *

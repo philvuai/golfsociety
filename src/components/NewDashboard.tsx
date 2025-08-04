@@ -550,8 +550,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                       <EventValue>{activeEvent.status}</EventValue>
                     </EventDetail>
                     <EventDetail>
-                      <EventLabel>Players:</EventLabel>
-                      <EventValue>{activeEvent.playerCount}</EventValue>
+                      <EventLabel>Total Players:</EventLabel>
+                      <EventValue>{(activeEvent.playerCount || 0) + (activeEvent.playerCount2 || 0)}</EventValue>
                     </EventDetail>
                     <EventDetail>
                       <EventLabel>Date:</EventLabel>
