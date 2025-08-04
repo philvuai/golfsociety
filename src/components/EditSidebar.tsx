@@ -158,7 +158,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
         setEventData(prev => prev ? { ...prev, surplus: calculatedSurplus } : null);
       }
     }
-  }, [eventData?.playerFee, eventData?.playerCount, eventData?.courseFee]);
+  }, [eventData?.playerFee, eventData?.playerCount, eventData?.courseFee, eventData]);
 
   const handleSave = () => {
     if (eventData) {
@@ -383,12 +383,12 @@ const [eventData, setEventData] = useState<Event | null>(event);
             <Input
               type="text"
               placeholder="Surplus amount"
-              value={parseFloat(eventData.surplus || 0).toFixed(2)}
+              value={Number(eventData.surplus || 0).toFixed(2)}
               readOnly
               style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
             />
             <small style={{ color: '#6b7280', fontSize: '12px', marginTop: '5px', display: 'block' }}>
-              Player Income - Course Fee = £{parseFloat((eventData.playerFee || 0) * (eventData.playerCount || 0)).toFixed(2)} - £{parseFloat(eventData.courseFee || 0).toFixed(2)}
+              Player Income - Course Fee = £{Number((eventData.playerFee || 0) * (eventData.playerCount || 0)).toFixed(2)} - £{Number(eventData.courseFee || 0).toFixed(2)}
             </small>
           </Section>
 

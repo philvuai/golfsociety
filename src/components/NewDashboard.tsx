@@ -291,15 +291,6 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-// Helper function to ensure numeric values are valid
-const ensureNumber = (value: any): number => {
-  if (typeof value === 'number' && !isNaN(value)) return value;
-  if (typeof value === 'string' && value !== '') {
-    const num = parseFloat(value);
-    if (!isNaN(num)) return num;
-  }
-  return 0;
-};
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [events, setEvents] = useState<Event[]>([]);
