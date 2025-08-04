@@ -1,5 +1,3 @@
-
-
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
@@ -63,7 +61,9 @@ async function initializeDatabase() {
 }
 
 // Initialize the database when the application starts
-initializeDatabase();
+initializeDatabase().catch(err => {
+  console.error('Database initialization failed, but continuing:', err);
+});
 
 class DataStore {
   // Password Hashing methods
