@@ -229,7 +229,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
           </Section>
 
           <Section>
-            <SectionTitle>Player Information - Group 1</SectionTitle>
+            <SectionTitle>Player Information - {eventData.playerGroup1Name || 'Group 1'}</SectionTitle>
             <div style={{ marginBottom: '15px' }}>
               <label style={{ 
                 display: 'block', 
@@ -288,7 +288,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
           </Section>
 
           <Section>
-            <SectionTitle>Player Information - Group 2</SectionTitle>
+            <SectionTitle>Player Information - {eventData.playerGroup2Name || 'Group 2'}</SectionTitle>
             <div style={{ marginBottom: '15px' }}>
               <label style={{ 
                 display: 'block', 
