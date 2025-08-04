@@ -344,6 +344,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       playerCount2: 0,
       playerFee2: 0,
       playerGroup2Name: 'Guests',
+      levy1Name: 'Leicestershire',
+      levy1Value: 0,
+      levy2Name: 'Regional',
+      levy2Value: 0,
       courseFee: 0,
       cashInBank: 0,
       funds: { bankTransfer: 0, cash: 0, card: 0 },
@@ -610,6 +614,28 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 <CardContent>
                   <StatValue>£{(activeEvent.cashInBank || 0).toFixed(2)}</StatValue>
                   <StatLabel>as per {formatDateBritish(activeEvent.date)}</StatLabel>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Levy</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FundsList>
+                    <FundItem>
+                      <FundLabel>{activeEvent.levy1Name || 'Leicestershire'}</FundLabel>
+                      <FundAmount>£{(activeEvent.levy1Value || 0).toFixed(2)}</FundAmount>
+                    </FundItem>
+                    <FundItem>
+                      <FundLabel>{activeEvent.levy2Name || 'Regional'}</FundLabel>
+                      <FundAmount>£{(activeEvent.levy2Value || 0).toFixed(2)}</FundAmount>
+                    </FundItem>
+                    <FundItem>
+                      <FundLabel>Total Levy</FundLabel>
+                      <FundAmount>£{((activeEvent.levy1Value || 0) + (activeEvent.levy2Value || 0)).toFixed(2)}</FundAmount>
+                    </FundItem>
+                  </FundsList>
                 </CardContent>
               </Card>
 

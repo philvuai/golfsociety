@@ -386,6 +386,80 @@ const [eventData, setEventData] = useState<Event | null>(event);
           </Section>
 
           <Section>
+            <SectionTitle>Levy</SectionTitle>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
+              }}>Levy 1 Name</label>
+              <Input
+                type="text"
+                placeholder="Leicestershire"
+                value={eventData.levy1Name || 'Leicestershire'}
+                onChange={(e) => setEventData({ ...eventData, levy1Name: e.target.value })}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
+              }}>Levy 1 Value</label>
+              <Input
+                type="text"
+                placeholder="0.00"
+                value={String(eventData.levy1Value || 0)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setEventData({ ...eventData, levy1Value: value === '' ? 0 : Number(value) });
+                  }
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
+              }}>Levy 2 Name</label>
+              <Input
+                type="text"
+                placeholder="Regional"
+                value={eventData.levy2Name || 'Regional'}
+                onChange={(e) => setEventData({ ...eventData, levy2Name: e.target.value })}
+              />
+            </div>
+            <div>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
+              }}>Levy 2 Value</label>
+              <Input
+                type="text"
+                placeholder="0.00"
+                value={String(eventData.levy2Value || 0)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setEventData({ ...eventData, levy2Value: value === '' ? 0 : Number(value) });
+                  }
+                }}
+              />
+            </div>
+          </Section>
+
+          <Section>
             <SectionTitle>Payments</SectionTitle>
             <div style={{ marginBottom: '15px' }}>
               <label style={{ 

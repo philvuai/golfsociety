@@ -57,6 +57,10 @@ class DataStore {
               player_fee NUMERIC(10, 2),
               player_count_2 INTEGER DEFAULT 0,
               player_fee_2 NUMERIC(10, 2) DEFAULT 0,
+              levy_1_name VARCHAR(255) DEFAULT 'Leicestershire',
+              levy_1_value NUMERIC(10, 2) DEFAULT 0,
+              levy_2_name VARCHAR(255) DEFAULT 'Regional',
+              levy_2_value NUMERIC(10, 2) DEFAULT 0,
               course_fee NUMERIC(10, 2),
               cash_in_bank NUMERIC(10, 2),
               funds JSONB,
@@ -74,7 +78,11 @@ class DataStore {
           ADD COLUMN IF NOT EXISTS player_count_2 INTEGER DEFAULT 0,
           ADD COLUMN IF NOT EXISTS player_fee_2 NUMERIC(10, 2) DEFAULT 0,
           ADD COLUMN IF NOT EXISTS player_group_1_name VARCHAR(255) DEFAULT 'Members',
-          ADD COLUMN IF NOT EXISTS player_group_2_name VARCHAR(255) DEFAULT 'Guests'
+          ADD COLUMN IF NOT EXISTS player_group_2_name VARCHAR(255) DEFAULT 'Guests',
+          ADD COLUMN IF NOT EXISTS levy_1_name VARCHAR(255) DEFAULT 'Leicestershire',
+          ADD COLUMN IF NOT EXISTS levy_1_value NUMERIC(10, 2) DEFAULT 0,
+          ADD COLUMN IF NOT EXISTS levy_2_name VARCHAR(255) DEFAULT 'Regional',
+          ADD COLUMN IF NOT EXISTS levy_2_value NUMERIC(10, 2) DEFAULT 0
         `;
         
         // Seed initial users
@@ -151,6 +159,10 @@ class DataStore {
       playerCount2: Number(dbEvent.player_count_2) || 0,
       playerFee2: Number(dbEvent.player_fee_2) || 0,
       playerGroup2Name: dbEvent.player_group_2_name || 'Guests',
+      levy1Name: dbEvent.levy_1_name || 'Leicestershire',
+      levy1Value: Number(dbEvent.levy_1_value) || 0,
+      levy2Name: dbEvent.levy_2_name || 'Regional',
+      levy2Value: Number(dbEvent.levy_2_value) || 0,
       courseFee: Number(dbEvent.course_fee) || 0,
       cashInBank: Number(dbEvent.cash_in_bank) || 0,
       funds: funds,
@@ -177,13 +189,13 @@ class DataStore {
 
   async createEvent(eventData) {
     await this.ensureDbInitialized();
-    const { name, date, location, status, playerCount, playerFee, playerGroup1Name, playerCount2, playerFee2, playerGroup2Name, courseFee, cashInBank, funds, surplus, notes } = eventData;
+    const { name, date, location, status, playerCount, playerFee, playerGroup1Name, playerCount2, playerFee2, playerGroup2Name, levy1Name, levy1Value, levy2Name, levy2Value, courseFee, cashInBank, funds, surplus, notes } = eventData;
     // Ensure funds is properly serialized as JSON
     const fundsJson = JSON.stringify(funds || { bankTransfer: 0, cash: 0, card: 0 });
     
     const result = await sql`
-      INSERT INTO events (name, date, location, status, player_count, player_fee, player_group_1_name, player_count_2, player_fee_2, player_group_2_name, course_fee, cash_in_bank, funds, surplus, notes) 
-      VALUES (${name}, ${date}, ${location}, ${status}, ${playerCount || 0}, ${playerFee || 0}, ${playerGroup1Name || 'Members'}, ${playerCount2 || 0}, ${playerFee2 || 0}, ${playerGroup2Name || 'Guests'}, ${courseFee || 0}, ${cashInBank || 0}, ${fundsJson}, ${surplus || 0}, ${notes || ''}) 
+      INSERT INTO events (name, date, location, status, player_count, player_fee, player_group_1_name, player_count_2, player_fee_2, player_group_2_name, levy_1_name, levy_1_value, levy_2_name, levy_2_value, course_fee, cash_in_bank, funds, surplus, notes) 
+      VALUES (${name}, ${date}, ${location}, ${status}, ${playerCount || 0}, ${playerFee || 0}, ${playerGroup1Name || 'Members'}, ${playerCount2 || 0}, ${playerFee2 || 0}, ${playerGroup2Name || 'Guests'}, ${levy1Name || 'Leicestershire'}, ${levy1Value || 0}, ${levy2Name || 'Regional'}, ${levy2Value || 0}, ${courseFee || 0}, ${cashInBank || 0}, ${fundsJson}, ${surplus || 0}, ${notes || ''}) 
       RETURNING *
     `;
     return this.mapDbEventToFrontend(result[0]);
@@ -191,7 +203,7 @@ class DataStore {
 
   async updateEvent(id, updates) {
     await this.ensureDbInitialized();
-    const { name, date, location, status, playerCount, playerFee, playerGroup1Name, playerCount2, playerFee2, playerGroup2Name, courseFee, cashInBank, funds, surplus, notes } = updates;
+    const { name, date, location, status, playerCount, playerFee, playerGroup1Name, playerCount2, playerFee2, playerGroup2Name, levy1Name, levy1Value, levy2Name, levy2Value, courseFee, cashInBank, funds, surplus, notes } = updates;
     // Ensure funds is properly serialized as JSON
     const fundsJson = JSON.stringify(funds || { bankTransfer: 0, cash: 0, card: 0 });
     
@@ -199,7 +211,8 @@ class DataStore {
       UPDATE events 
       SET name = ${name}, date = ${date}, location = ${location}, status = ${status}, player_count = ${playerCount || 0}, 
           player_fee = ${playerFee || 0}, player_group_1_name = ${playerGroup1Name || 'Members'}, player_count_2 = ${playerCount2 || 0}, player_fee_2 = ${playerFee2 || 0}, 
-          player_group_2_name = ${playerGroup2Name || 'Guests'}, course_fee = ${courseFee || 0}, cash_in_bank = ${cashInBank || 0}, funds = ${fundsJson}, 
+          player_group_2_name = ${playerGroup2Name || 'Guests'}, levy_1_name = ${levy1Name || 'Leicestershire'}, levy_1_value = ${levy1Value || 0}, 
+          levy_2_name = ${levy2Name || 'Regional'}, levy_2_value = ${levy2Value || 0}, course_fee = ${courseFee || 0}, cash_in_bank = ${cashInBank || 0}, funds = ${fundsJson}, 
           surplus = ${surplus || 0}, notes = ${notes || ''}, updated_at = CURRENT_TIMESTAMP 
       WHERE id = ${id} AND deleted_at IS NULL 
       RETURNING *

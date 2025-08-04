@@ -18,6 +18,10 @@ export interface Event {
   playerCount2: number;
   playerFee2: number;
   playerGroup2Name?: string;
+  levy1Name?: string;
+  levy1Value: number;
+  levy2Name?: string;
+  levy2Value: number;
   courseFee: number;
   cashInBank: number;
   funds: Funds;
