@@ -340,6 +340,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       players: [],
       playerCount: 0,
       playerFee: 0,
+      playerCount2: 0,
+      playerFee2: 0,
       courseFee: 0,
       cashInBank: 0,
       funds: { bankTransfer: 0, cash: 0, card: 0 },
