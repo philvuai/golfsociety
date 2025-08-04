@@ -146,19 +146,21 @@ const [eventData, setEventData] = useState<Event | null>(event);
     setEventData(event);
   }, [event]);
 
-  // Auto-calculate surplus whenever playerFee, playerCount, or courseFee changes
+  // Auto-calculate surplus whenever playerFee, playerCount, playerFee2, playerCount2, or courseFee changes
   React.useEffect(() => {
     if (eventData) {
-      const playerIncome = (eventData.playerFee || 0) * (eventData.playerCount || 0);
+      const playerIncome1 = (eventData.playerFee || 0) * (eventData.playerCount || 0);
+      const playerIncome2 = (eventData.playerFee2 || 0) * (eventData.playerCount2 || 0);
+      const totalPlayerIncome = playerIncome1 + playerIncome2;
       const courseFee = eventData.courseFee || 0;
-      const calculatedSurplus = playerIncome - courseFee;
+      const calculatedSurplus = totalPlayerIncome - courseFee;
       
       // Only update if the calculated surplus is different from the current one
       if (Math.abs(calculatedSurplus - (eventData.surplus || 0)) > 0.001) {
         setEventData(prev => prev ? { ...prev, surplus: calculatedSurplus } : null);
       }
     }
-  }, [eventData?.playerFee, eventData?.playerCount, eventData?.courseFee, eventData]);
+  }, [eventData?.playerFee, eventData?.playerCount, eventData?.playerFee2, eventData?.playerCount2, eventData?.courseFee, eventData]);
 
   const handleSave = () => {
     if (eventData) {
@@ -227,7 +229,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
           </Section>
 
           <Section>
-            <SectionTitle>Player Information</SectionTitle>
+            <SectionTitle>Player Information - Group 1</SectionTitle>
             <div style={{ marginBottom: '15px' }}>
               <label style={{ 
                 display: 'block', 
@@ -268,6 +270,54 @@ const [eventData, setEventData] = useState<Event | null>(event);
                 }}
               />
             </div>
+          </Section>
+
+          <Section>
+            <SectionTitle>Player Information - Group 2</SectionTitle>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
+              }}>Player Fee (Group 2)</label>
+              <Input
+                type="text"
+                placeholder="0.00"
+                value={String(eventData.playerFee2 || 0)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setEventData({ ...eventData, playerFee2: value === '' ? 0 : Number(value) });
+                  }
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
+              }}>Total Players (Group 2)</label>
+              <Input
+                type="text"
+                placeholder="Number of players"
+                value={String(eventData.playerCount2 || 0)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d+$/.test(value)) {
+                    setEventData({ ...eventData, playerCount2: value === '' ? 0 : Number(value) });
+                  }
+                }}
+              />
+            </div>
+          </Section>
+
+          <Section>
+            <SectionTitle>Course Information</SectionTitle>
             <div>
               <label style={{ 
                 display: 'block', 
@@ -388,7 +438,9 @@ const [eventData, setEventData] = useState<Event | null>(event);
               style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
             />
             <small style={{ color: '#6b7280', fontSize: '12px', marginTop: '5px', display: 'block' }}>
-              Player Income - Course Fee = £{Number((eventData.playerFee || 0) * (eventData.playerCount || 0)).toFixed(2)} - £{Number(eventData.courseFee || 0).toFixed(2)}
+              Total Player Income - Course Fee = £{Number(((eventData.playerFee || 0) * (eventData.playerCount || 0)) + ((eventData.playerFee2 || 0) * (eventData.playerCount2 || 0))).toFixed(2)} - £{Number(eventData.courseFee || 0).toFixed(2)}
+              <br />
+              Group 1: £{Number((eventData.playerFee || 0) * (eventData.playerCount || 0)).toFixed(2)} | Group 2: £{Number((eventData.playerFee2 || 0) * (eventData.playerCount2 || 0)).toFixed(2)}
             </small>
           </Section>
 
