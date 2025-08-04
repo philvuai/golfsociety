@@ -171,7 +171,7 @@ const exportToPDF = (events: Event[]) => {
 const Content = styled.div`
   flex: 1;
   padding: 32px;
-  background: #f8fafc;
+  background: ${props => props.theme.colors.background};
   
   @media (max-width: 768px) {
     padding: 16px;
@@ -183,14 +183,14 @@ const Header = styled.div`
 `;
 
 const Title = styled.h1`
-  color: #111827;
+  color: ${props => props.theme.colors.text.primary};
   font-size: 24px;
   font-weight: 600;
   margin-bottom: 8px;
 `;
 
 const Subtitle = styled.p`
-  color: #6b7280;
+  color: ${props => props.theme.colors.text.secondary};
   font-size: 14px;
 `;
 
@@ -211,23 +211,23 @@ const StatsBar = styled.div`
 `;
 
 const StatCard = styled.div`
-  background: white;
+  background: ${props => props.theme.colors.surface};
   border-radius: 8px;
   padding: 16px 20px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid ${props => props.theme.colors.border.medium};
+  box-shadow: ${props => props.theme.shadows.small};
 `;
 
 const StatNumber = styled.div`
   font-size: 24px;
   font-weight: 700;
-  color: #111827;
+  color: ${props => props.theme.colors.text.primary};
   margin-bottom: 4px;
 `;
 
 const StatCardLabel = styled.div`
   font-size: 12px;
-  color: #6b7280;
+  color: ${props => props.theme.colors.text.secondary};
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
