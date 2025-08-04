@@ -14,8 +14,10 @@ export interface Event {
   players: string[];
   playerCount: number;
   playerFee: number;
+  playerGroup1Name?: string;
   playerCount2: number;
   playerFee2: number;
+  playerGroup2Name?: string;
   courseFee: number;
   cashInBank: number;
   funds: Funds;

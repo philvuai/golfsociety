@@ -237,6 +237,21 @@ const [eventData, setEventData] = useState<Event | null>(event);
                 fontWeight: '500', 
                 color: '#555', 
                 marginBottom: '5px' 
+              }}>Group Name</label>
+              <Input
+                type="text"
+                placeholder="Group 1 Name"
+                value={eventData.playerGroup1Name || 'Members'}
+                onChange={(e) => setEventData({ ...eventData, playerGroup1Name: e.target.value })}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
               }}>Player Fee</label>
               <Input
                 type="text"
@@ -274,6 +289,21 @@ const [eventData, setEventData] = useState<Event | null>(event);
 
           <Section>
             <SectionTitle>Player Information - Group 2</SectionTitle>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500', 
+                color: '#555', 
+                marginBottom: '5px' 
+              }}>Group Name</label>
+              <Input
+                type="text"
+                placeholder="Group 2 Name"
+                value={eventData.playerGroup2Name || 'Guests'}
+                onChange={(e) => setEventData({ ...eventData, playerGroup2Name: e.target.value })}
+              />
+            </div>
             <div style={{ marginBottom: '15px' }}>
               <label style={{ 
                 display: 'block', 
