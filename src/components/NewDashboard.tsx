@@ -13,7 +13,22 @@ import autoTable from 'jspdf-autotable';
 const DashboardContainer = styled.div`
   display: flex;
   background: ${props => props.theme.colors.background};
+  background-attachment: fixed;
+  position: relative;
   min-height: 100vh;
+  
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: ${props => props.theme.colors.backgroundPattern};
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
   
   @media (max-width: 768px) {
     flex-direction: column;
