@@ -24,25 +24,26 @@ exports.handler = async (event, context) => {
     
     // Check environment variables
     const envCheck = {
-      NEON_DATABASE_URL: process.env.NEON_DATABASE_URL ? '✅ Set' : '❌ Missing',
+      NETLIFY_DATABASE_URL: process.env.NETLIFY_DATABASE_URL ? '✅ Set' : '❌ Missing',
       NODE_ENV: process.env.NODE_ENV || 'undefined'
     };
     
     console.log('Environment variables:', envCheck);
     
-    if (!process.env.NEON_DATABASE_URL) {
+    if (!process.env.NETLIFY_DATABASE_URL) {
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({
           success: false,
-          error: 'NEON_DATABASE_URL environment variable is not set',
+          error: 'NETLIFY_DATABASE_URL environment variable is not set',
           environment: envCheck,
           instructions: [
             '1. Go to your Netlify dashboard',
-            '2. Navigate to Site settings > Environment variables',
-            '3. Add NEON_DATABASE_URL with your Neon database connection string',
-            '4. Format: postgresql://username:password@hostname/database_name?sslmode=require'
+            '2. Navigate to Site settings > Environment variables', 
+            '3. Connect your Neon database through Netlify integrations',
+            '4. Or manually add NETLIFY_DATABASE_URL with your Neon connection string',
+            '5. Format: postgresql://username:password@hostname/database_name?sslmode=require'
           ]
         })
       };

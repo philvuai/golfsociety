@@ -36,8 +36,8 @@ async function setupDatabase() {
         const envContent = `# Local Development Environment
 NODE_ENV=development
 
-# Neon Database URL
-NEON_DATABASE_URL=${answer.trim()}
+# Netlify Neon Database URL
+NETLIFY_DATABASE_URL=${answer.trim()}
 `;
         fs.writeFileSync(envPath, envContent);
         console.log('\n✅ Updated .env file with your database URL');
@@ -49,7 +49,7 @@ NEON_DATABASE_URL=${answer.trim()}
       console.log('\n🔒 These passwords will be automatically hashed when you first log in.');
       console.log('\n📝 Next steps:');
       console.log('1. Make sure your Neon database is created and accessible');
-      console.log('2. Set the NEON_DATABASE_URL environment variable in Netlify dashboard');
+      console.log('2. Set the NETLIFY_DATABASE_URL environment variable in Netlify dashboard');
       console.log('3. Test authentication by running the application');
       console.log('4. The database tables will be created automatically on first run');
 
