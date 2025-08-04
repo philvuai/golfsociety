@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import styled from 'styled-components';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/NewDashboard';
+import Loading from './components/Loading';
 import { GlobalStyles } from './styles/GlobalStyles';
 import { apiService } from './services/api';
 import { User } from './types';
@@ -16,16 +17,26 @@ const AppContainer = styled.div`
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [stylesLoaded, setStylesLoaded] = useState(false);
 
   useEffect(() => {
-    // Check for existing session
-    const savedUser = localStorage.getItem('golf-society-user');
-    if (savedUser) {
-      const user = JSON.parse(savedUser);
-      setUser(user);
-      apiService.setUser(user);
-    }
-    setLoading(false);
+    // Add a small delay to ensure styled-components are fully loaded
+    const loadApp = async () => {
+      // Check for existing session
+      const savedUser = localStorage.getItem('golf-society-user');
+      if (savedUser) {
+        const user = JSON.parse(savedUser);
+        setUser(user);
+        apiService.setUser(user);
+      }
+      
+      // Small delay to ensure styles are applied
+      await new Promise(resolve => setTimeout(resolve, 100));
+      setStylesLoaded(true);
+      setLoading(false);
+    };
+    
+    loadApp();
   }, []);
 
   const handleLogin = async (username: string, password: string) => {
@@ -46,8 +57,8 @@ function App() {
     localStorage.removeItem('golf-society-user');
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
+  if (loading || !stylesLoaded) {
+    return <Loading />;
   }
 
   return (
