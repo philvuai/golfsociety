@@ -87,6 +87,36 @@ const Subtitle = styled.p`
   font-size: 14px;
 `;
 
+const StatsBar = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+`;
+
+const StatCard = styled.div`
+  background: white;
+  border-radius: 8px;
+  padding: 16px 20px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+`;
+
+const StatNumber = styled.div`
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+`;
+
+const StatCardLabel = styled.div`
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -408,6 +438,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const totalFunds = (activeEvent && activeEvent.funds) ? 
     (activeEvent.funds.bankTransfer || 0) + (activeEvent.funds.cash || 0) + (activeEvent.funds.card || 0) : 0;
 
+  // Calculate stats for the stats bar
+  const totalEvents = visibleEvents.length;
+  const totalRevenue = visibleEvents.reduce((sum, event) => {
+    const income1 = (event.playerFee || 0) * (event.playerCount || 0);
+    const income2 = (event.playerFee2 || 0) * (event.playerCount2 || 0);
+    return sum + income1 + income2;
+  }, 0);
+  const averageSurplus = visibleEvents.length > 0 ? 
+    visibleEvents.reduce((sum, event) => sum + (event.surplus || 0), 0) / visibleEvents.length : 0;
+  const upcomingEvents = visibleEvents.filter(e => e.status === 'upcoming').length;
+
   return (
     <>
       <DashboardContainer>
@@ -473,6 +514,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             <ErrorContainer>
               {error}
             </ErrorContainer>
+          )}
+
+          {!loading && events.length > 0 && (
+            <StatsBar>
+              <StatCard>
+                <StatNumber>{totalEvents}</StatNumber>
+                <StatCardLabel>Total Events</StatCardLabel>
+              </StatCard>
+              <StatCard>
+                <StatNumber>£{totalRevenue.toFixed(0)}</StatNumber>
+                <StatCardLabel>Total Revenue</StatCardLabel>
+              </StatCard>
+              <StatCard>
+                <StatNumber>£{averageSurplus.toFixed(0)}</StatNumber>
+                <StatCardLabel>Avg Surplus</StatCardLabel>
+              </StatCard>
+              <StatCard>
+                <StatNumber>{upcomingEvents}</StatNumber>
+                <StatCardLabel>Upcoming Events</StatCardLabel>
+              </StatCard>
+            </StatsBar>
           )}
 
           {loading ? (
