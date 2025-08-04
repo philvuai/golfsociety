@@ -72,9 +72,9 @@ export interface Theme {
 export const lightTheme: Theme = {
   colors: {
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    backgroundPattern: 'radial-gradient(circle at 25% 25%, #fbbf24 0%, transparent 50%), radial-gradient(circle at 75% 75%, #10b981 0%, transparent 50%)',
-    surface: 'rgba(255, 255, 255, 0.85)',
-    surfaceElevated: 'rgba(255, 255, 255, 0.95)',
+    backgroundPattern: 'radial-gradient(circle at 25% 25%, rgba(251, 191, 36, 0.1) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.1) 0%, transparent 50%)',
+    surface: 'rgba(255, 255, 255, 0.25)',
+    surfaceElevated: 'rgba(255, 255, 255, 0.35)',
     glass: {
       background: 'rgba(255, 255, 255, 0.1)',
       border: 'rgba(255, 255, 255, 0.2)',

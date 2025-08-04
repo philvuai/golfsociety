@@ -365,12 +365,12 @@ const EventDetail = styled.div`
 `;
 
 const EventLabel = styled.span`
-  color: #6b7280;
+  color: ${props => props.theme.colors.text.secondary};
   font-weight: 500;
 `;
 
 const EventValue = styled.span`
-  color: #111827;
+  color: ${props => props.theme.colors.text.primary};
   font-weight: 600;
 `;
 
