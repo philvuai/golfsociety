@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS events (
     status VARCHAR(50),
     player_count INTEGER,
     player_fee NUMERIC(10, 2),
+    player_count2 INTEGER DEFAULT 0,
+    player_fee2 NUMERIC(10, 2) DEFAULT 0.00,
     course_fee NUMERIC(10, 2),
     cash_in_bank NUMERIC(10, 2),
     funds JSONB,
@@ -38,6 +40,10 @@ CREATE TABLE IF NOT EXISTS events (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE
 );
+
+-- Add new columns to existing events table if they don't exist
+ALTER TABLE events ADD COLUMN IF NOT EXISTS player_count2 INTEGER DEFAULT 0;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS player_fee2 NUMERIC(10, 2) DEFAULT 0.00;
 
 -- Seed initial data if users table is empty
 INSERT INTO users (username, password_hash, role)
@@ -99,10 +105,10 @@ class DataStore {
   async createEvent(eventData) {
     const client = await pool.connect();
     try {
-      const { name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes } = eventData;
+      const { name, date, location, status, playerCount, playerFee, playerCount2, playerFee2, courseFee, cashInBank, funds, surplus, notes } = eventData;
       const result = await client.query(
-        'INSERT INTO events (name, date, location, status, player_count, player_fee, course_fee, cash_in_bank, funds, surplus, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
-        [name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes]
+        'INSERT INTO events (name, date, location, status, player_count, player_fee, player_count2, player_fee2, course_fee, cash_in_bank, funds, surplus, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *',
+        [name, date, location, status, playerCount, playerFee, playerCount2 || 0, playerFee2 || 0, courseFee, cashInBank, funds, surplus, notes]
       );
       return result.rows[0];
     } finally {
@@ -113,10 +119,10 @@ class DataStore {
   async updateEvent(id, updates) {
     const client = await pool.connect();
     try {
-      const { name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes } = updates;
+      const { name, date, location, status, playerCount, playerFee, playerCount2, playerFee2, courseFee, cashInBank, funds, surplus, notes } = updates;
       const result = await client.query(
-        'UPDATE events SET name = $1, date = $2, location = $3, status = $4, player_count = $5, player_fee = $6, course_fee = $7, cash_in_bank = $8, funds = $9, surplus = $10, notes = $11, updated_at = CURRENT_TIMESTAMP WHERE id = $12 AND deleted_at IS NULL RETURNING *',
-        [name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes, id]
+        'UPDATE events SET name = $1, date = $2, location = $3, status = $4, player_count = $5, player_fee = $6, player_count2 = $7, player_fee2 = $8, course_fee = $9, cash_in_bank = $10, funds = $11, surplus = $12, notes = $13, updated_at = CURRENT_TIMESTAMP WHERE id = $14 AND deleted_at IS NULL RETURNING *',
+        [name, date, location, status, playerCount, playerFee, playerCount2 || 0, playerFee2 || 0, courseFee, cashInBank, funds, surplus, notes, id]
       );
       return result.rows[0];
     } finally {

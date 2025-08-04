@@ -339,6 +339,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       players: [],
       playerCount: 0,
       playerFee: 0,
+      playerCount2: 0,
+      playerFee2: 0,
       courseFee: 0,
       cashInBank: 0,
       funds: { bankTransfer: 0, cash: 0, card: 0 },
@@ -479,12 +481,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 <CardContent>
                   <EventInfo>
                     <EventDetail>
-                      <EventLabel>Player Fee:</EventLabel>
+                      <EventLabel>Primary Player Fee:</EventLabel>
                       <EventValue>£{(activeEvent.playerFee || 0).toFixed(2)}</EventValue>
                     </EventDetail>
                     <EventDetail>
-                      <EventLabel>Total Players:</EventLabel>
+                      <EventLabel>Primary Total Players:</EventLabel>
                       <EventValue>{activeEvent.playerCount}</EventValue>
+                    </EventDetail>
+                    <EventDetail>
+                      <EventLabel>Secondary Player Fee:</EventLabel>
+                      <EventValue>£{(activeEvent.playerFee2 || 0).toFixed(2)}</EventValue>
+                    </EventDetail>
+                    <EventDetail>
+                      <EventLabel>Secondary Total Players:</EventLabel>
+                      <EventValue>{activeEvent.playerCount2 || 0}</EventValue>
                     </EventDetail>
                     <EventDetail style={{ 
                       borderTop: '1px solid #e5e7eb', 
@@ -492,8 +502,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                       marginTop: '8px',
                       fontWeight: '600'
                     }}>
-                      <EventLabel style={{ fontWeight: '600' }}>Player Income:</EventLabel>
-                      <EventValue style={{ fontSize: '18px', color: '#059669' }}>£{((activeEvent.playerFee || 0) * activeEvent.playerCount).toFixed(2)}</EventValue>
+                      <EventLabel style={{ fontWeight: '600' }}>Total Player Income:</EventLabel>
+                      <EventValue style={{ fontSize: '18px', color: '#059669' }}>£{(((activeEvent.playerFee || 0) * activeEvent.playerCount) + ((activeEvent.playerFee2 || 0) * (activeEvent.playerCount2 || 0))).toFixed(2)}</EventValue>
                     </EventDetail>
                     <EventDetail>
                       <EventLabel>Course Fee:</EventLabel>
@@ -565,11 +575,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </SurplusHeader>
                 <CardContent>
                   <SurplusValue>£{(() => {
-                    const playerIncome = (activeEvent.playerFee || 0) * activeEvent.playerCount;
+                    const playerIncome = (activeEvent.playerFee || 0) * activeEvent.playerCount + 
+                                        (activeEvent.playerFee2 || 0) * (activeEvent.playerCount2 || 0);
                     const courseFee = activeEvent.courseFee;
                     return (playerIncome - courseFee).toFixed(2);
                   })()}</SurplusValue>
-                  <StatLabel style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Player Income - Course Fee</StatLabel>
+                  <StatLabel style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Total Player Income - Course Fee</StatLabel>
                 </CardContent>
               </SurplusCard>
 
