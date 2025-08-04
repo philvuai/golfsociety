@@ -38,12 +38,16 @@ const DashboardContainer = styled.div`
 const Sidebar = styled.div`
   width: 280px;
   background: ${props => props.theme.colors.sidebar.background};
+  backdrop-filter: ${props => props.theme.blur.md};
+  -webkit-backdrop-filter: ${props => props.theme.blur.md};
   color: ${props => props.theme.colors.sidebar.text};
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   border-right: 1px solid ${props => props.theme.colors.sidebar.border};
+  position: relative;
+  z-index: 1;
   
   @media (max-width: 768px) {
     width: 100%;
@@ -186,7 +190,9 @@ const exportToPDF = (events: Event[]) => {
 const Content = styled.div`
   flex: 1;
   padding: 32px;
-  background: ${props => props.theme.colors.background};
+  background: transparent;
+  position: relative;
+  z-index: 1;
   
   @media (max-width: 768px) {
     padding: 16px;
@@ -227,10 +233,20 @@ const StatsBar = styled.div`
 
 const StatCard = styled.div`
   background: ${props => props.theme.colors.surface};
-  border-radius: 8px;
-  padding: 16px 20px;
+  backdrop-filter: ${props => props.theme.blur.md};
+  -webkit-backdrop-filter: ${props => props.theme.blur.md};
+  border-radius: 16px;
+  padding: 20px 24px;
   border: 1px solid ${props => props.theme.colors.border.medium};
-  box-shadow: ${props => props.theme.shadows.small};
+  box-shadow: ${props => props.theme.shadows.medium};
+  transition: all ${props => props.theme.animations.normal};
+  animation: slideIn 0.6s ease-out;
+  
+  &:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: ${props => props.theme.shadows.large};
+    border-color: ${props => props.theme.colors.accent.primary};
+  }
 `;
 
 const StatNumber = styled.div`
@@ -260,45 +276,79 @@ const Grid = styled.div`
 `;
 
 const Card = styled.div`
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  background: ${props => props.theme.colors.surface};
+  backdrop-filter: ${props => props.theme.blur.md};
+  -webkit-backdrop-filter: ${props => props.theme.blur.md};
+  border-radius: 20px;
+  border: 1px solid ${props => props.theme.colors.border.medium};
   overflow: hidden;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s ease;
+  box-shadow: ${props => props.theme.shadows.medium};
+  transition: all ${props => props.theme.animations.normal};
+  animation: slideIn 0.8s ease-out;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: ${props => props.theme.colors.gradient.mesh};
+    opacity: 0.02;
+    border-radius: inherit;
+    pointer-events: none;
+  }
 
   &:hover {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: ${props => props.theme.shadows.xl};
+    border-color: ${props => props.theme.colors.accent.primary};
+    
+    &::before {
+      opacity: 0.05;
+    }
   }
 `;
 
 const CardHeader = styled.div`
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid ${props => props.theme.colors.border.light};
+  position: relative;
+  z-index: 1;
 `;
 
 const CardTitle = styled.h3`
-  color: #111827;
-  font-size: 16px;
-  font-weight: 600;
+  color: ${props => props.theme.colors.text.primary};
+  font-size: 18px;
+  font-weight: 700;
   margin: 0;
+  letter-spacing: -0.025em;
 `;
 
 const CardContent = styled.div`
-  padding: 20px 24px;
+  padding: 24px 28px;
+  position: relative;
+  z-index: 1;
 `;
 
 const StatValue = styled.div`
-  font-size: 32px;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 4px;
+  font-size: 36px;
+  font-weight: 800;
+  color: ${props => props.theme.colors.text.primary};
+  margin-bottom: 8px;
+  background: ${props => props.theme.colors.gradient.secondary};
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `;
 
 const StatLabel = styled.div`
   font-size: 14px;
-  color: #6b7280;
-  font-weight: 500;
+  color: ${props => props.theme.colors.text.secondary};
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const EventInfo = styled.div`
