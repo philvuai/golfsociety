@@ -483,6 +483,36 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             <Grid>
               <Card>
                 <CardHeader>
+                  <CardTitle>Current Event</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <EventInfo>
+                    <EventDetail>
+                      <EventLabel>Event:</EventLabel>
+                      <EventValue>{activeEvent.name}</EventValue>
+                    </EventDetail>
+                    <EventDetail>
+                      <EventLabel>Location:</EventLabel>
+                      <EventValue>{activeEvent.location || 'TBD'}</EventValue>
+                    </EventDetail>
+                    <EventDetail>
+                      <EventLabel>Status:</EventLabel>
+                      <EventValue>{activeEvent.status}</EventValue>
+                    </EventDetail>
+                    <EventDetail>
+                      <EventLabel>Total Players:</EventLabel>
+                      <EventValue>{(activeEvent.playerCount || 0) + (activeEvent.playerCount2 || 0)}</EventValue>
+                    </EventDetail>
+                    <EventDetail>
+                      <EventLabel>Date:</EventLabel>
+                      <EventValue>{formatDateBritish(activeEvent.date)}</EventValue>
+                    </EventDetail>
+                  </EventInfo>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
                   <CardTitle>{activeEvent?.playerGroup1Name || 'Group 1'} Information</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -537,36 +567,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Current Event</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <EventInfo>
-                    <EventDetail>
-                      <EventLabel>Event:</EventLabel>
-                      <EventValue>{activeEvent.name}</EventValue>
-                    </EventDetail>
-                    <EventDetail>
-                      <EventLabel>Location:</EventLabel>
-                      <EventValue>{activeEvent.location || 'TBD'}</EventValue>
-                    </EventDetail>
-                    <EventDetail>
-                      <EventLabel>Status:</EventLabel>
-                      <EventValue>{activeEvent.status}</EventValue>
-                    </EventDetail>
-                    <EventDetail>
-                      <EventLabel>Total Players:</EventLabel>
-                      <EventValue>{(activeEvent.playerCount || 0) + (activeEvent.playerCount2 || 0)}</EventValue>
-                    </EventDetail>
-                    <EventDetail>
-                      <EventLabel>Date:</EventLabel>
-                      <EventValue>{formatDateBritish(activeEvent.date)}</EventValue>
-                    </EventDetail>
-                  </EventInfo>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
                   <CardTitle>Payments</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -590,22 +590,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   </FundsList>
                 </CardContent>
               </Card>
-
-              <SurplusCard>
-                <SurplusHeader>
-                  <SurplusTitle>Surplus Funds on the day</SurplusTitle>
-                </SurplusHeader>
-                <CardContent>
-                  <SurplusValue>£{(() => {
-                    const playerIncome1 = (activeEvent?.playerFee || 0) * (activeEvent?.playerCount || 0);
-                    const playerIncome2 = (activeEvent?.playerFee2 || 0) * (activeEvent?.playerCount2 || 0);
-                    const totalPlayerIncome = playerIncome1 + playerIncome2;
-                    const courseFee = activeEvent?.courseFee || 0;
-                    return (totalPlayerIncome - courseFee).toFixed(2);
-                  })()}</SurplusValue>
-                  <StatLabel style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Total Player Income - Course Fee</StatLabel>
-                </CardContent>
-              </SurplusCard>
 
               <Card>
                 <CardHeader>
@@ -638,6 +622,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   </FundsList>
                 </CardContent>
               </Card>
+
+              <SurplusCard>
+                <SurplusHeader>
+                  <SurplusTitle>Surplus Funds on the day</SurplusTitle>
+                </SurplusHeader>
+                <CardContent>
+                  <SurplusValue>£{(() => {
+                    const playerIncome1 = (activeEvent?.playerFee || 0) * (activeEvent?.playerCount || 0);
+                    const playerIncome2 = (activeEvent?.playerFee2 || 0) * (activeEvent?.playerCount2 || 0);
+                    const totalPlayerIncome = playerIncome1 + playerIncome2;
+                    const courseFee = activeEvent?.courseFee || 0;
+                    return (totalPlayerIncome - courseFee).toFixed(2);
+                  })()}</SurplusValue>
+                  <StatLabel style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Total Player Income - Course Fee</StatLabel>
+                </CardContent>
+              </SurplusCard>
 
               <NotesCard>
                 <CardHeader>
