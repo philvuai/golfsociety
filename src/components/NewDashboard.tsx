@@ -299,7 +299,7 @@ const safeNumber = (value: any): number => {
 };
 
 // Helper function to normalize event data
-const normalizeEvent = (event: any): Event => {
+const normalizeEvent = (event: any): Event | null => {
   if (!event) return null;
   
   return {
