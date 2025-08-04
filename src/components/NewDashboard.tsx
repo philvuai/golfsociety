@@ -397,7 +397,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const visibleEvents = events.filter(event => !event.deletedAt);
   
   const totalFunds = activeEvent ? 
-    activeEvent.funds.bankTransfer + activeEvent.funds.cash + activeEvent.funds.card : 0;
+    (activeEvent.funds?.bankTransfer || 0) + (activeEvent.funds?.cash || 0) + (activeEvent.funds?.card || 0) : 0;
 
   return (
     <>
@@ -497,7 +497,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                     </EventDetail>
                     <EventDetail>
                       <EventLabel>Course Fee:</EventLabel>
-                      <EventValue>£{activeEvent.courseFee.toFixed(2)}</EventValue>
+                      <EventValue>£{(activeEvent.courseFee || 0).toFixed(2)}</EventValue>
                     </EventDetail>
                   </EventInfo>
                 </CardContent>
@@ -541,15 +541,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   <FundsList>
                     <FundItem>
                       <FundLabel>Bank Transfer</FundLabel>
-                      <FundAmount>£{activeEvent.funds.bankTransfer.toFixed(2)}</FundAmount>
+                      <FundAmount>£{(activeEvent.funds?.bankTransfer || 0).toFixed(2)}</FundAmount>
                     </FundItem>
                     <FundItem>
                       <FundLabel>Cash</FundLabel>
-                      <FundAmount>£{activeEvent.funds.cash.toFixed(2)}</FundAmount>
+                      <FundAmount>£{(activeEvent.funds?.cash || 0).toFixed(2)}</FundAmount>
                     </FundItem>
                     <FundItem>
                       <FundLabel>Card</FundLabel>
-                      <FundAmount>£{activeEvent.funds.card.toFixed(2)}</FundAmount>
+                      <FundAmount>£{(activeEvent.funds?.card || 0).toFixed(2)}</FundAmount>
                     </FundItem>
                     <FundItem>
                       <FundLabel>Total</FundLabel>
@@ -566,7 +566,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 <CardContent>
                   <SurplusValue>£{(() => {
                     const playerIncome = (activeEvent.playerFee || 0) * activeEvent.playerCount;
-                    const courseFee = activeEvent.courseFee;
+                    const courseFee = activeEvent.courseFee || 0;
                     return (playerIncome - courseFee).toFixed(2);
                   })()}</SurplusValue>
                   <StatLabel style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Player Income - Course Fee</StatLabel>
