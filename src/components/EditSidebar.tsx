@@ -239,7 +239,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
               <Input
                 type="text"
                 placeholder="0.00"
-                value={eventData.playerFee || 0}
+                value={String(eventData.playerFee || 0)}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === '' || /^\d*\.?\d*$/.test(value)) {
@@ -259,7 +259,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
               <Input
                 type="text"
                 placeholder="Number of players"
-                value={eventData.playerCount}
+                value={String(eventData.playerCount || 0)}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === '' || /^\d+$/.test(value)) {
@@ -279,7 +279,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
               <Input
                 type="text"
                 placeholder="0.00"
-                value={eventData.courseFee}
+                value={String(eventData.courseFee || 0)}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === '' || /^\d*\.?\d*$/.test(value)) {
@@ -295,7 +295,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
             <Input
               type="text"
               placeholder="0.00"
-              value={eventData.cashInBank || 0}
+              value={String(eventData.cashInBank || 0)}
               onChange={(e) => {
                 const value = e.target.value;
                 if (value === '' || /^\d*\.?\d*$/.test(value)) {
@@ -318,7 +318,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
               <Input
                 type="text"
                 placeholder="0.00"
-                value={eventData.funds.bankTransfer}
+                value={String(eventData.funds.bankTransfer || 0)}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === '' || /^\d*\.?\d*$/.test(value)) {
@@ -341,7 +341,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
               <Input
                 type="text"
                 placeholder="0.00"
-                value={eventData.funds.cash}
+                value={String(eventData.funds.cash || 0)}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === '' || /^\d*\.?\d*$/.test(value)) {
@@ -364,7 +364,7 @@ const [eventData, setEventData] = useState<Event | null>(event);
               <Input
                 type="text"
                 placeholder="0.00"
-                value={eventData.funds.card}
+                value={String(eventData.funds.card || 0)}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === '' || /^\d*\.?\d*$/.test(value)) {
