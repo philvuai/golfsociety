@@ -337,10 +337,6 @@ const StatValue = styled.div`
   font-weight: 800;
   color: ${props => props.theme.colors.text.primary};
   margin-bottom: 8px;
-  background: ${props => props.theme.colors.gradient.secondary};
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 `;
 
 const StatLabel = styled.div`
@@ -385,23 +381,23 @@ const FundItem = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid ${props => props.theme.colors.border.light};
   
   &:last-child {
     border-bottom: none;
     font-weight: 600;
     padding-top: 12px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid ${props => props.theme.colors.border.medium};
   }
 `;
 
 const FundLabel = styled.span`
-  color: #6b7280;
+  color: ${props => props.theme.colors.text.secondary};
   font-size: 14px;
 `;
 
 const FundAmount = styled.span`
-  color: #111827;
+  color: ${props => props.theme.colors.text.primary};
   font-weight: 600;
   font-size: 14px;
 `;

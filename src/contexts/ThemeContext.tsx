@@ -72,23 +72,23 @@ export interface Theme {
 export const lightTheme: Theme = {
   colors: {
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    backgroundPattern: 'radial-gradient(circle at 25% 25%, rgba(251, 191, 36, 0.1) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.1) 0%, transparent 50%)',
-    surface: 'rgba(255, 255, 255, 0.25)',
-    surfaceElevated: 'rgba(255, 255, 255, 0.35)',
+    backgroundPattern: 'radial-gradient(circle at 25% 25%, rgba(251, 191, 36, 0.08) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.08) 0%, transparent 50%)',
+    surface: 'rgba(255, 255, 255, 0.9)',
+    surfaceElevated: 'rgba(255, 255, 255, 0.95)',
     glass: {
-      background: 'rgba(255, 255, 255, 0.1)',
-      border: 'rgba(255, 255, 255, 0.2)',
+      background: 'rgba(255, 255, 255, 0.15)',
+      border: 'rgba(255, 255, 255, 0.25)',
     },
     text: {
-      primary: '#111827',
-      secondary: '#6b7280',
-      tertiary: '#9ca3af',
-      accent: '#6366f1',
+      primary: '#0f172a',
+      secondary: '#475569',
+      tertiary: '#64748b',
+      accent: '#4f46e5',
     },
     border: {
-      light: 'rgba(255, 255, 255, 0.1)',
-      medium: 'rgba(255, 255, 255, 0.2)',
-      strong: 'rgba(255, 255, 255, 0.3)',
+      light: 'rgba(255, 255, 255, 0.15)',
+      medium: 'rgba(255, 255, 255, 0.25)',
+      strong: 'rgba(255, 255, 255, 0.4)',
     },
     sidebar: {
       background: 'rgba(31, 41, 55, 0.95)',
@@ -141,18 +141,18 @@ export const lightTheme: Theme = {
 export const darkTheme: Theme = {
   colors: {
     background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
-    backgroundPattern: 'radial-gradient(circle at 20% 80%, #3b82f6 0%, transparent 50%), radial-gradient(circle at 80% 20%, #8b5cf6 0%, transparent 50%), radial-gradient(circle at 40% 40%, #06b6d4 0%, transparent 50%)',
-    surface: 'rgba(30, 41, 59, 0.85)',
+    backgroundPattern: 'radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 50%), radial-gradient(circle at 40% 40%, rgba(6, 182, 212, 0.08) 0%, transparent 50%)',
+    surface: 'rgba(30, 41, 59, 0.9)',
     surfaceElevated: 'rgba(51, 65, 85, 0.95)',
     glass: {
-      background: 'rgba(0, 0, 0, 0.1)',
-      border: 'rgba(255, 255, 255, 0.1)',
+      background: 'rgba(0, 0, 0, 0.2)',
+      border: 'rgba(255, 255, 255, 0.15)',
     },
     text: {
       primary: '#f8fafc',
       secondary: '#cbd5e1',
       tertiary: '#94a3b8',
-      accent: '#6366f1',
+      accent: '#818cf8',
     },
     border: {
       light: 'rgba(255, 255, 255, 0.05)',
