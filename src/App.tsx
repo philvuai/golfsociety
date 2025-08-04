@@ -5,18 +5,12 @@ import LoginPage from './components/LoginPage';
 import Dashboard from './components/NewDashboard';
 import { GlobalStyles } from './styles/GlobalStyles';
 import { apiService } from './services/api';
+import { User } from './types';
 
 const AppContainer = styled.div`
   min-height: 100vh;
   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
 `;
-
-interface User {
-  id: string;
-  username: string;
-  role: 'admin' | 'viewer';
-  isAuthenticated: boolean;
-}
 
 function App() {
   const [user, setUser] = useState<User | null>(null);

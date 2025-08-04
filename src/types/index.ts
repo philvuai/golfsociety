@@ -38,15 +38,6 @@ export interface Funds {
   card: number;
 }
 
-export interface DashboardData {
-  players: Player[];
-  currentEvent: Event | null;
-  funds: Funds;
-  surplus: number;
-  notes: string;
-  lastUpdated: string;
-}
-
 export interface User {
   id: string;
   username: string;
