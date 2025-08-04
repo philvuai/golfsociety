@@ -49,38 +49,16 @@ SELECT 'viewer', 'viewonly2024', 'viewer'
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'viewer');
 `;
 
-// SQL for adding new columns - run separately to handle potential errors gracefully
-const MIGRATION_SQL = `
-ALTER TABLE events ADD COLUMN IF NOT EXISTS player_count2 INTEGER DEFAULT 0;
-ALTER TABLE events ADD COLUMN IF NOT EXISTS player_fee2 NUMERIC(10, 2) DEFAULT 0.00;
-`;
-
 // Function to initialize the database
 async function initializeDatabase() {
-  let client;
   try {
-    client = await pool.connect();
-    
-    // First, create basic tables
+    const client = await pool.connect();
     await client.query(CREATE_TABLES_SQL);
-    
-    // Then, try to add new columns if they don't exist
-    try {
-      await client.query(MIGRATION_SQL);
-      console.log('Database migration completed successfully');
-    } catch (migrationError) {
-      console.log('Migration skipped (columns may already exist):', migrationError.message);
-    }
-    
+    client.release();
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
-    // Don't throw the error - let the app continue even if migration fails
-    console.log('Continuing with existing database structure...');
-  } finally {
-    if (client) {
-      client.release();
-    }
+    throw error;
   }
 }
 
@@ -121,24 +99,12 @@ class DataStore {
   async createEvent(eventData) {
     const client = await pool.connect();
     try {
-      const { name, date, location, status, playerCount, playerFee, playerCount2, playerFee2, courseFee, cashInBank, funds, surplus, notes } = eventData;
-      
-      // First try with new columns
-      try {
-        const result = await client.query(
-          'INSERT INTO events (name, date, location, status, player_count, player_fee, player_count2, player_fee2, course_fee, cash_in_bank, funds, surplus, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *',
-          [name, date, location, status, playerCount, playerFee, playerCount2 || 0, playerFee2 || 0, courseFee, cashInBank, funds, surplus, notes]
-        );
-        return result.rows[0];
-      } catch (error) {
-        // If new columns don't exist, fall back to old structure
-        console.log('Falling back to legacy table structure for createEvent');
-        const result = await client.query(
-          'INSERT INTO events (name, date, location, status, player_count, player_fee, course_fee, cash_in_bank, funds, surplus, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
-          [name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes]
-        );
-        return result.rows[0];
-      }
+      const { name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes } = eventData;
+      const result = await client.query(
+        'INSERT INTO events (name, date, location, status, player_count, player_fee, course_fee, cash_in_bank, funds, surplus, notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
+        [name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes]
+      );
+      return result.rows[0];
     } finally {
       client.release();
     }
@@ -147,24 +113,12 @@ class DataStore {
   async updateEvent(id, updates) {
     const client = await pool.connect();
     try {
-      const { name, date, location, status, playerCount, playerFee, playerCount2, playerFee2, courseFee, cashInBank, funds, surplus, notes } = updates;
-      
-      // First try with new columns
-      try {
-        const result = await client.query(
-          'UPDATE events SET name = $1, date = $2, location = $3, status = $4, player_count = $5, player_fee = $6, player_count2 = $7, player_fee2 = $8, course_fee = $9, cash_in_bank = $10, funds = $11, surplus = $12, notes = $13, updated_at = CURRENT_TIMESTAMP WHERE id = $14 AND deleted_at IS NULL RETURNING *',
-          [name, date, location, status, playerCount, playerFee, playerCount2 || 0, playerFee2 || 0, courseFee, cashInBank, funds, surplus, notes, id]
-        );
-        return result.rows[0];
-      } catch (error) {
-        // If new columns don't exist, fall back to old structure
-        console.log('Falling back to legacy table structure for updateEvent');
-        const result = await client.query(
-          'UPDATE events SET name = $1, date = $2, location = $3, status = $4, player_count = $5, player_fee = $6, course_fee = $7, cash_in_bank = $8, funds = $9, surplus = $10, notes = $11, updated_at = CURRENT_TIMESTAMP WHERE id = $12 AND deleted_at IS NULL RETURNING *',
-          [name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes, id]
-        );
-        return result.rows[0];
-      }
+      const { name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes } = updates;
+      const result = await client.query(
+        'UPDATE events SET name = $1, date = $2, location = $3, status = $4, player_count = $5, player_fee = $6, course_fee = $7, cash_in_bank = $8, funds = $9, surplus = $10, notes = $11, updated_at = CURRENT_TIMESTAMP WHERE id = $12 AND deleted_at IS NULL RETURNING *',
+        [name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes, id]
+      );
+      return result.rows[0];
     } finally {
       client.release();
     }
