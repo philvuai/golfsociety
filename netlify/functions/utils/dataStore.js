@@ -163,8 +163,6 @@ class DataStore {
   async createEvent(eventData) {
     await this.ensureDbInitialized();
     const { name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes } = eventData;
-    console.log('Creating event with data:', eventData);
-    
     // Ensure funds is properly serialized as JSON
     const fundsJson = JSON.stringify(funds || { bankTransfer: 0, cash: 0, card: 0 });
     
@@ -173,15 +171,12 @@ class DataStore {
       VALUES (${name}, ${date}, ${location}, ${status}, ${playerCount || 0}, ${playerFee || 0}, ${courseFee || 0}, ${cashInBank || 0}, ${fundsJson}, ${surplus || 0}, ${notes || ''}) 
       RETURNING *
     `;
-    console.log('Event created successfully:', result[0]);
     return this.mapDbEventToFrontend(result[0]);
   }
 
   async updateEvent(id, updates) {
     await this.ensureDbInitialized();
     const { name, date, location, status, playerCount, playerFee, courseFee, cashInBank, funds, surplus, notes } = updates;
-    console.log('Updating event with data:', updates);
-    
     // Ensure funds is properly serialized as JSON
     const fundsJson = JSON.stringify(funds || { bankTransfer: 0, cash: 0, card: 0 });
     
@@ -193,7 +188,6 @@ class DataStore {
       WHERE id = ${id} AND deleted_at IS NULL 
       RETURNING *
     `;
-    console.log('Event updated successfully:', result[0]);
     return this.mapDbEventToFrontend(result[0]);
   }
 
