@@ -7,7 +7,7 @@ import { formatDateBritish } from '../utils/dateUtils';
 import { apiService } from '../services/api';
 import { useTheme } from '../contexts/ThemeContext';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -142,7 +142,7 @@ const exportToPDF = (events: Event[]) => {
   doc.text(`Generated on: ${new Date().toLocaleDateString('en-GB')}`, 14, 30);
   
   // Create table
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: 40,
     head: [['Name', 'Date', 'Location', 'Status', 'Players', 'Surplus']],
     body: events.map(event => [
@@ -555,7 +555,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   // Filter out deleted events for display
   const visibleEvents = events.filter(event => !event.deletedAt);
   
-  const { theme, toggleTheme, isDarkMode } = useTheme();
+  const { toggleTheme, isDarkMode } = useTheme();
 
   const totalFunds = (activeEvent && activeEvent.funds) ? 
     (activeEvent.funds.bankTransfer || 0) + (activeEvent.funds.cash || 0) + (activeEvent.funds.card || 0) : 0;
