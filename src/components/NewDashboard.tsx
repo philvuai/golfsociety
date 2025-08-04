@@ -6,12 +6,13 @@ import { Event } from '../types';
 import { formatDateBritish } from '../utils/dateUtils';
 import { apiService } from '../services/api';
 import { useTheme } from '../contexts/ThemeContext';
+import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const DashboardContainer = styled.div`
   display: flex;
-  background: #f8fafc;
+  background: ${props => props.theme.colors.background};
   min-height: 100vh;
   
   @media (max-width: 768px) {
@@ -21,19 +22,19 @@ const DashboardContainer = styled.div`
 
 const Sidebar = styled.div`
   width: 280px;
-  background: #1f2937;
-  color: white;
+  background: ${props => props.theme.colors.sidebar.background};
+  color: ${props => props.theme.colors.sidebar.text};
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-right: 1px solid #374151;
+  border-right: 1px solid ${props => props.theme.colors.sidebar.border};
   
   @media (max-width: 768px) {
     width: 100%;
     padding: 16px;
     border-right: none;
-    border-bottom: 1px solid #374151;
+    border-bottom: 1px solid ${props => props.theme.colors.sidebar.border};
   }
 `;
 
@@ -41,7 +42,7 @@ const SidebarTitle = styled.h2`
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 16px;
-  color: #f9fafb;
+  color: ${props => props.theme.colors.sidebar.text};
 `;
 
 const SidebarButton = styled.button<{ active?: boolean }>`
@@ -49,8 +50,8 @@ const SidebarButton = styled.button<{ active?: boolean }>`
   align-items: center;
   gap: 12px;
   width: 100%;
-  background: ${props => props.active ? '#4b5563' : '#374151'};
-  color: ${props => props.active ? '#f9fafb' : '#d1d5db'};
+  background: ${props => props.active ? props.theme.colors.sidebar.buttonActive : 'transparent'};
+  color: ${props => props.active ? props.theme.colors.sidebar.text : props.theme.colors.sidebar.textSecondary};
   border: none;
   padding: 12px 16px;
   border-radius: 8px;
@@ -61,8 +62,8 @@ const SidebarButton = styled.button<{ active?: boolean }>`
   text-align: left;
 
   &:hover {
-    background: #4b5563;
-    color: #f9fafb;
+    background: ${props => props.theme.colors.sidebar.buttonHover};
+    color: ${props => props.theme.colors.sidebar.text};
   }
 `;
 
@@ -71,7 +72,7 @@ const EventsSection = styled.div`
 `;
 
 const EventsSectionTitle = styled.h3`
-  color: #9ca3af;
+  color: ${props => props.theme.colors.text.tertiary};
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -90,7 +91,7 @@ const ActionButton = styled.button`
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #4f46e5;
+  background: ${props => props.theme.colors.status.info};
   color: white;
   border: none;
   border-radius: 8px;
@@ -555,7 +556,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   // Filter out deleted events for display
   const visibleEvents = events.filter(event => !event.deletedAt);
   
-  const { toggleTheme, isDarkMode } = useTheme();
+  const { theme, toggleTheme, isDarkMode } = useTheme();
 
   const totalFunds = (activeEvent && activeEvent.funds) ? 
     (activeEvent.funds.bankTransfer || 0) + (activeEvent.funds.cash || 0) + (activeEvent.funds.card || 0) : 0;
@@ -572,7 +573,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const upcomingEvents = visibleEvents.filter(e => e.status === 'upcoming').length;
 
   return (
-    <>
+    <StyledThemeProvider theme={theme}>
       <DashboardContainer>
         <Sidebar>
           <SidebarTitle>Welcome, {user.username}</SidebarTitle>
@@ -877,7 +878,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         onSave={handleSaveData}
         onDelete={handleDeleteEvent}
       />
-    </>
+    </StyledThemeProvider>
   );
 };
 
