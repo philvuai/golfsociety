@@ -111,16 +111,53 @@ class DataStore {
     return await bcrypt.compare(password, hash);
   }
 
+  // Map database event format (snake_case) to frontend format (camelCase)
+  mapDbEventToFrontend(dbEvent) {
+    if (!dbEvent) return null;
+    
+    // Parse funds JSON if it's a string
+    let funds;
+    if (typeof dbEvent.funds === 'string') {
+      try {
+        funds = JSON.parse(dbEvent.funds);
+      } catch (e) {
+        funds = { bankTransfer: 0, cash: 0, card: 0 };
+      }
+    } else {
+      funds = dbEvent.funds || { bankTransfer: 0, cash: 0, card: 0 };
+    }
+
+    return {
+      id: String(dbEvent.id),
+      name: dbEvent.name || '',
+      date: dbEvent.date,
+      location: dbEvent.location || '',
+      status: dbEvent.status || 'upcoming',
+      players: [], // Not stored in DB currently
+      playerCount: Number(dbEvent.player_count) || 0,
+      playerFee: Number(dbEvent.player_fee) || 0,
+      courseFee: Number(dbEvent.course_fee) || 0,
+      cashInBank: Number(dbEvent.cash_in_bank) || 0,
+      funds: funds,
+      surplus: Number(dbEvent.surplus) || 0,
+      notes: dbEvent.notes || '',
+      createdAt: dbEvent.created_at,
+      updatedAt: dbEvent.updated_at,
+      deletedAt: dbEvent.deleted_at
+    };
+  }
+
   async getEvents() {
     await this.ensureDbInitialized();
     const result = await sql`SELECT * FROM events WHERE deleted_at IS NULL ORDER BY date DESC`;
-    return result;
+    // Convert database format to frontend format
+    return result.map(event => this.mapDbEventToFrontend(event));
   }
 
   async getEventById(id) {
     await this.ensureDbInitialized();
     const result = await sql`SELECT * FROM events WHERE id = ${id} AND deleted_at IS NULL`;
-    return result[0];
+    return result[0] ? this.mapDbEventToFrontend(result[0]) : null;
   }
 
   async createEvent(eventData) {
@@ -137,7 +174,7 @@ class DataStore {
       RETURNING *
     `;
     console.log('Event created successfully:', result[0]);
-    return result[0];
+    return this.mapDbEventToFrontend(result[0]);
   }
 
   async updateEvent(id, updates) {
@@ -157,7 +194,7 @@ class DataStore {
       RETURNING *
     `;
     console.log('Event updated successfully:', result[0]);
-    return result[0];
+    return this.mapDbEventToFrontend(result[0]);
   }
 
   async deleteEvent(id) {
