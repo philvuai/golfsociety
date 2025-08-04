@@ -56,14 +56,9 @@ async function initializeDatabase() {
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
-    throw error;
+    // Don't throw error, just log it
   }
 }
-
-// Initialize the database when the application starts
-initializeDatabase().catch(err => {
-  console.error('Database initialization failed, but continuing:', err);
-});
 
 class DataStore {
   // Password Hashing methods
