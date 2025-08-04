@@ -379,18 +379,17 @@ const [eventData, setEventData] = useState<Event | null>(event);
           </Section>
 
           <Section>
-            <SectionTitle>Surplus</SectionTitle>
+            <SectionTitle>Surplus (Auto-calculated)</SectionTitle>
             <Input
               type="text"
               placeholder="Surplus amount"
-              value={eventData.surplus}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                  setEventData({ ...eventData, surplus: value === '' ? 0 : Number(value) });
-                }
-              }}
+              value={eventData.surplus?.toFixed(2) || '0.00'}
+              readOnly
+              style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
             />
+            <small style={{ color: '#6b7280', fontSize: '12px', marginTop: '5px', display: 'block' }}>
+              Player Income - Course Fee = £{((eventData.playerFee || 0) * (eventData.playerCount || 0)).toFixed(2)} - £{(eventData.courseFee || 0).toFixed(2)}
+            </small>
           </Section>
 
           <Section>

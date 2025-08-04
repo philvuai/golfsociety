@@ -291,30 +291,14 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-// Helper function to safely convert values to numbers
-const safeNumber = (value: any): number => {
-  if (value === null || value === undefined || value === '') return 0;
-  const num = parseFloat(value);
-  return isNaN(num) ? 0 : num;
-};
-
-// Helper function to normalize event data
-const normalizeEvent = (event: any): Event | null => {
-  if (!event) return null;
-  
-  return {
-    ...event,
-    playerFee: safeNumber(event.playerFee),
-    courseFee: safeNumber(event.courseFee),
-    cashInBank: safeNumber(event.cashInBank),
-    surplus: safeNumber(event.surplus),
-    playerCount: safeNumber(event.playerCount),
-    funds: {
-      bankTransfer: safeNumber(event.funds?.bankTransfer),
-      cash: safeNumber(event.funds?.cash),
-      card: safeNumber(event.funds?.card)
-    }
-  };
+// Helper function to ensure numeric values are valid
+const ensureNumber = (value: any): number => {
+  if (typeof value === 'number' && !isNaN(value)) return value;
+  if (typeof value === 'string' && value !== '') {
+    const num = parseFloat(value);
+    if (!isNaN(num)) return num;
+  }
+  return 0;
 };
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
@@ -324,8 +308,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const rawActiveEvent = events.find(event => event.id === activeEventId) || events[0];
-  const activeEvent = normalizeEvent(rawActiveEvent);
+  const activeEvent = events.find(event => event.id === activeEventId) || events[0];
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
