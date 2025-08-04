@@ -1,15 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import { LogOut, Plus, PenTool, CheckCircle } from 'lucide-react';
+import { LogOut, Plus, PenTool, CheckCircle, Download, FileText, Moon, Sun } from 'lucide-react';
 import EditSidebar from './EditSidebar';
 import { Event } from '../types';
 import { formatDateBritish } from '../utils/dateUtils';
 import { apiService } from '../services/api';
+import { useTheme } from '../contexts/ThemeContext';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const DashboardContainer = styled.div`
   display: flex;
   background: #f8fafc;
   min-height: 100vh;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 `;
 
 const Sidebar = styled.div`
@@ -21,6 +28,13 @@ const Sidebar = styled.div`
   flex-direction: column;
   gap: 12px;
   border-right: 1px solid #374151;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    padding: 16px;
+    border-right: none;
+    border-bottom: 1px solid #374151;
+  }
 `;
 
 const SidebarTitle = styled.h2`
@@ -65,10 +79,102 @@ const EventsSectionTitle = styled.h3`
   letter-spacing: 0.5px;
 `;
 
+const ActionsContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+  gap: 8px;
+`;
+
+const ActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #4338ca;
+    transform: translateY(-1px);
+  }
+`;
+
+const exportToCSV = (events: Event[]) => {
+  const csvRows = [
+    ["Name", "Date", "Location", "Status", "Total Players", "Surplus"],
+    ...events.map(event => [
+      event.name || 'Untitled Event',
+      new Date(event.date).toLocaleDateString('en-GB'),
+      event.location || 'TBD',
+      event.status || 'unknown',
+      (event.playerCount || 0) + (event.playerCount2 || 0),
+      `£${(event.surplus || 0).toFixed(2)}`
+    ])
+  ];
+
+  const csvContent = "data:text/csv;charset=utf-8," 
+    + csvRows.map(e => e.join(",")).join("\n");
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `golf_events_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+};
+
+const exportToPDF = (events: Event[]) => {
+  const doc = new jsPDF();
+  
+  // Add title
+  doc.setFontSize(16);
+  doc.text("Golf Society Events Report", 14, 20);
+  
+  // Add generation date
+  doc.setFontSize(10);
+  doc.text(`Generated on: ${new Date().toLocaleDateString('en-GB')}`, 14, 30);
+  
+  // Create table
+  (doc as any).autoTable({
+    startY: 40,
+    head: [['Name', 'Date', 'Location', 'Status', 'Players', 'Surplus']],
+    body: events.map(event => [
+      event.name || 'Untitled Event',
+      new Date(event.date).toLocaleDateString('en-GB'),
+      event.location || 'TBD',
+      event.status || 'unknown',
+      (event.playerCount || 0) + (event.playerCount2 || 0),
+      `£${(event.surplus || 0).toFixed(2)}`
+    ]),
+    styles: {
+      fontSize: 10,
+      cellPadding: 5
+    },
+    headStyles: {
+      fillColor: [79, 70, 229],
+      textColor: 255,
+      fontStyle: 'bold'
+    }
+  });
+
+  doc.save(`golf_events_${new Date().toISOString().split('T')[0]}.pdf`);
+};
+
 const Content = styled.div`
   flex: 1;
   padding: 32px;
   background: #f8fafc;
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
 `;
 
 const Header = styled.div`
@@ -92,6 +198,15 @@ const StatsBar = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
   margin-bottom: 32px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const StatCard = styled.div`
@@ -121,6 +236,11 @@ const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 24px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 `;
 
 const Card = styled.div`
@@ -435,6 +555,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   // Filter out deleted events for display
   const visibleEvents = events.filter(event => !event.deletedAt);
   
+  const { theme, toggleTheme, isDarkMode } = useTheme();
+
   const totalFunds = (activeEvent && activeEvent.funds) ? 
     (activeEvent.funds.bankTransfer || 0) + (activeEvent.funds.cash || 0) + (activeEvent.funds.card || 0) : 0;
 
@@ -517,24 +639,39 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           )}
 
           {!loading && events.length > 0 && (
-            <StatsBar>
-              <StatCard>
-                <StatNumber>{totalEvents}</StatNumber>
-                <StatCardLabel>Total Events</StatCardLabel>
-              </StatCard>
-              <StatCard>
-                <StatNumber>£{totalRevenue.toFixed(0)}</StatNumber>
-                <StatCardLabel>Total Revenue</StatCardLabel>
-              </StatCard>
-              <StatCard>
-                <StatNumber>£{averageSurplus.toFixed(0)}</StatNumber>
-                <StatCardLabel>Avg Surplus</StatCardLabel>
-              </StatCard>
-              <StatCard>
-                <StatNumber>{upcomingEvents}</StatNumber>
-                <StatCardLabel>Upcoming Events</StatCardLabel>
-              </StatCard>
-            </StatsBar>
+            <>
+              <StatsBar>
+                <StatCard>
+                  <StatNumber>{totalEvents}</StatNumber>
+                  <StatCardLabel>Total Events</StatCardLabel>
+                </StatCard>
+                <StatCard>
+                  <StatNumber>£{totalRevenue.toFixed(0)}</StatNumber>
+                  <StatCardLabel>Total Revenue</StatCardLabel>
+                </StatCard>
+                <StatCard>
+                  <StatNumber>£{averageSurplus.toFixed(0)}</StatNumber>
+                  <StatCardLabel>Avg Surplus</StatCardLabel>
+                </StatCard>
+                <StatCard>
+                  <StatNumber>{upcomingEvents}</StatNumber>
+                  <StatCardLabel>Upcoming Events</StatCardLabel>
+                </StatCard>
+              </StatsBar>
+              
+              <ActionsContainer>
+                <ActionButton onClick={toggleTheme}>
+                  {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+                  {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                </ActionButton>
+                <ActionButton onClick={() => exportToCSV(visibleEvents)}>
+                  <Download size={16} /> Export CSV
+                </ActionButton>
+                <ActionButton onClick={() => exportToPDF(visibleEvents)}>
+                  <FileText size={16} /> Export PDF
+                </ActionButton>
+              </ActionsContainer>
+            </>
           )}
 
           {loading ? (

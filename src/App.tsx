@@ -6,6 +6,7 @@ import Dashboard from './components/NewDashboard';
 import { GlobalStyles } from './styles/GlobalStyles';
 import { apiService } from './services/api';
 import { User } from './types';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -50,30 +51,32 @@ function App() {
   }
 
   return (
-    <Router>
-      <AppContainer>
-        <GlobalStyles />
-        <Routes>
-          <Route 
-            path="/login" 
-            element={
-              user?.isAuthenticated ? 
-              <Navigate to="/dashboard" replace /> : 
-              <LoginPage onLogin={handleLogin} />
-            } 
-          />
-          <Route 
-            path="/dashboard" 
-            element={
-              user?.isAuthenticated ? 
-              <Dashboard user={user} onLogout={handleLogout} /> : 
-              <Navigate to="/login" replace />
-            } 
-          />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </AppContainer>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <AppContainer>
+          <GlobalStyles />
+          <Routes>
+            <Route 
+              path="/login" 
+              element={
+                user?.isAuthenticated ? 
+                <Navigate to="/dashboard" replace /> : 
+                <LoginPage onLogin={handleLogin} />
+              } 
+            />
+            <Route 
+              path="/dashboard" 
+              element={
+                user?.isAuthenticated ? 
+                <Dashboard user={user} onLogout={handleLogout} /> : 
+                <Navigate to="/login" replace />
+              } 
+            />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </AppContainer>
+      </Router>
+    </ThemeProvider>
   );
 }
 
