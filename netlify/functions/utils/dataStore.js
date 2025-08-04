@@ -47,20 +47,27 @@ SELECT 'viewer', 'viewonly2024', 'viewer'
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'viewer');
 `;
 
-// Function to initialize the database
-async function initializeDatabase() {
-  try {
-    const client = await pool.connect();
-    await client.query(CREATE_TABLES_SQL);
-    client.release();
-    console.log('Database initialized successfully');
-  } catch (error) {
-    console.error('Error initializing database:', error);
-    // Don't throw error, just log it
-  }
-}
-
 class DataStore {
+  constructor() {
+    this.dbInitialized = false;
+  }
+
+  // Ensure database is initialized before any operation
+  async ensureDbInitialized() {
+    if (!this.dbInitialized) {
+      try {
+        const client = await pool.connect();
+        await client.query(CREATE_TABLES_SQL);
+        client.release();
+        console.log('Database initialized successfully');
+        this.dbInitialized = true;
+      } catch (error) {
+        console.error('Error initializing database:', error);
+        // Don't throw error, just log it and mark as initialized to avoid retries
+        this.dbInitialized = true;
+      }
+    }
+  }
   // Password Hashing methods
   async hashPassword(password) {
     const salt = await bcrypt.genSalt(10);
@@ -72,6 +79,7 @@ class DataStore {
   }
 
   async getEvents() {
+    await this.ensureDbInitialized();
     const client = await pool.connect();
     try {
       const result = await client.query('SELECT * FROM events WHERE deleted_at IS NULL ORDER BY date DESC');
