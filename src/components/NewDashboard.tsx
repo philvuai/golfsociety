@@ -5,7 +5,7 @@ import EditSidebar from './EditSidebar';
 import { Event } from '../types';
 import { formatDateBritish } from '../utils/dateUtils';
 import { apiService } from '../services/api';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme, Theme } from '../contexts/ThemeContext';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -933,6 +933,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       
       {user.role === 'admin' && activeEvent && (activeEvent.status === 'upcoming' || activeEvent.status === 'in-progress') && (
         <CompleteEventButton 
+          theme={theme}
           onClick={handleCompleteEvent}
           title="Mark Event as Complete"
         >
@@ -941,7 +942,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       )}
       
       {user.role === 'admin' && (
-        <FloatingActionButton onClick={() => setEditSidebarOpen(true)}>
+        <FloatingActionButton theme={theme} onClick={() => setEditSidebarOpen(true)}>
           <PenTool size={20} />
         </FloatingActionButton>
       )}
