@@ -450,11 +450,11 @@ const ErrorContainer = styled.div`
   font-size: 14px;
 `;
 
-const FloatingActionButton = styled.button`
+const FloatingActionButton = styled.button<{ theme: Theme }>`
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: #6366f1;
+  background: ${props => props.theme.colors.accent.primary};
   color: white;
   border: none;
   border-radius: 50%;
@@ -463,22 +463,29 @@ const FloatingActionButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+  box-shadow: ${props => props.theme.shadows.glow};
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all ${props => props.theme.animations.normal};
+  z-index: 1000;
+  backdrop-filter: ${props => props.theme.blur.sm};
+  -webkit-backdrop-filter: ${props => props.theme.blur.sm};
 
   &:hover {
-    background: #4f46e5;
-    transform: translateY(-2px);
-    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+    background: ${props => props.theme.colors.status.info};
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: ${props => props.theme.shadows.xl}, ${props => props.theme.shadows.glow};
+  }
+
+  &:active {
+    transform: translateY(-2px) scale(1.02);
   }
 `;
 
-const CompleteEventButton = styled.button`
+const CompleteEventButton = styled.button<{ theme: Theme }>`
   position: fixed;
   bottom: 96px;
   right: 24px;
-  background: #059669;
+  background: ${props => props.theme.colors.status.success};
   color: white;
   border: none;
   border-radius: 50%;
@@ -487,14 +494,21 @@ const CompleteEventButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 25px rgba(5, 150, 105, 0.3);
+  box-shadow: ${props => props.theme.shadows.glow};
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all ${props => props.theme.animations.normal};
+  z-index: 1000;
+  backdrop-filter: ${props => props.theme.blur.sm};
+  -webkit-backdrop-filter: ${props => props.theme.blur.sm};
 
   &:hover {
-    background: #047857;
-    transform: translateY(-2px);
-    box-shadow: 0 15px 30px rgba(5, 150, 105, 0.4);
+    background: ${props => props.theme.colors.accent.primary};
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: ${props => props.theme.shadows.xl}, ${props => props.theme.shadows.glow};
+  }
+
+  &:active {
+    transform: translateY(-2px) scale(1.02);
   }
 `;
 
