@@ -1114,10 +1114,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                         <SummaryNumber>{participants.filter(p => p.paymentStatus === 'unpaid').length}</SummaryNumber>
                         <SummaryLabel>Unpaid</SummaryLabel>
                       </SummaryItem>
-                      <SummaryItem>
-                        <SummaryNumber>{participants.filter(p => p.paymentStatus === 'pending').length}</SummaryNumber>
-                        <SummaryLabel>Pending</SummaryLabel>
-                      </SummaryItem>
                     </ParticipantsSummary>
 
                     {/* Participants List */}
@@ -1125,24 +1121,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                       {participants.map((participant) => (
                         <ParticipantItem key={participant.id}>
                           <ParticipantInfo>
-                            <ParticipantName>{participant.name}</ParticipantName>
+                            <ParticipantName>{participant.member?.name || 'Unknown'}</ParticipantName>
                             <ParticipantDetails>
-                              {participant.membershipType && (
+                              {participant.memberGroup && (
                                 <ParticipantBadge variant="group">
-                                  {participant.membershipType}
+                                  {participant.memberGroup}
                                 </ParticipantBadge>
                               )}
-                              {participant.handicap && (
+                              {participant.member?.handicap && (
                                 <ParticipantBadge variant="handicap">
-                                  HCP: {participant.handicap}
+                                  HCP: {participant.member.handicap}
                                 </ParticipantBadge>
                               )}
                             </ParticipantDetails>
                           </ParticipantInfo>
                           <PaymentStatus isPaid={participant.paymentStatus === 'paid'}>
                             <PaymentIndicator isPaid={participant.paymentStatus === 'paid'} />
-                            {participant.paymentStatus === 'paid' ? 'Paid' : 
-                             participant.paymentStatus === 'pending' ? 'Pending' : 'Unpaid'}
+                            {participant.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
                           </PaymentStatus>
                         </ParticipantItem>
                       ))}
