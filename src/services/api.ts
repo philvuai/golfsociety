@@ -144,7 +144,7 @@ class ApiService {
   async addParticipantToEvent(
     eventId: string, 
     memberId: string, 
-    participantData: Partial<Pick<EventParticipant, 'isPlaying' | 'hasPaid' | 'paymentMethod' | 'notes'>>
+    participantData: Partial<Pick<EventParticipant, 'memberGroup' | 'paymentStatus' | 'paymentMethod' | 'playerFee' | 'notes'>>
   ): Promise<EventParticipant> {
     const response = await this.makeRequest('/event-participants', {
       method: 'POST',
@@ -153,9 +153,26 @@ class ApiService {
     return response.participant;
   }
 
+  // Alias for backward compatibility and cleaner naming
+  async createEventParticipant(
+    participantData: Omit<EventParticipant, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<EventParticipant> {
+    return this.addParticipantToEvent(
+      participantData.eventId,
+      participantData.memberId,
+      {
+        memberGroup: participantData.memberGroup,
+        paymentStatus: participantData.paymentStatus,
+        paymentMethod: participantData.paymentMethod,
+        playerFee: participantData.playerFee,
+        notes: participantData.notes
+      }
+    );
+  }
+
   async updateParticipant(
     participantId: string,
-    updates: Partial<Pick<EventParticipant, 'isPlaying' | 'hasPaid' | 'paymentMethod' | 'notes'>>
+    updates: Partial<Pick<EventParticipant, 'memberGroup' | 'paymentStatus' | 'paymentMethod' | 'playerFee' | 'notes'>>
   ): Promise<EventParticipant> {
     const response = await this.makeRequest('/event-participants', {
       method: 'PUT',
@@ -164,8 +181,27 @@ class ApiService {
     return response.participant;
   }
 
+  // Alias for cleaner naming
+  async updateEventParticipant(participant: EventParticipant): Promise<EventParticipant> {
+    return this.updateParticipant(participant.id, {
+      memberGroup: participant.memberGroup,
+      paymentStatus: participant.paymentStatus,
+      paymentMethod: participant.paymentMethod,
+      playerFee: participant.playerFee,
+      notes: participant.notes
+    });
+  }
+
   async removeParticipantFromEvent(eventId: string, memberId: string): Promise<EventParticipant> {
     const response = await this.makeRequest(`/event-participants?eventId=${eventId}&memberId=${memberId}`, {
+      method: 'DELETE',
+    });
+    return response.participant;
+  }
+
+  // Alias for cleaner naming
+  async deleteEventParticipant(participantId: string): Promise<EventParticipant> {
+    const response = await this.makeRequest(`/event-participants?id=${participantId}`, {
       method: 'DELETE',
     });
     return response.participant;
