@@ -63,9 +63,10 @@ export interface EventParticipant {
   id: string;
   eventId: string;
   memberId: string;
-  isPlaying: boolean;
-  hasPaid: boolean;
+  memberGroup: 'members' | 'guests';
+  paymentStatus: 'paid' | 'unpaid';
   paymentMethod?: 'cash' | 'card' | 'bank_transfer';
+  playerFee: number;
   notes?: string;
   member?: Member; // Populated via JOIN
   createdAt?: string;

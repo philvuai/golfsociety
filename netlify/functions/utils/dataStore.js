@@ -120,14 +120,33 @@ class DataStore {
               id SERIAL PRIMARY KEY,
               event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
               member_id INTEGER REFERENCES members(id) ON DELETE CASCADE,
-              is_playing BOOLEAN DEFAULT false,
-              has_paid BOOLEAN DEFAULT false,
+              member_group VARCHAR(20) DEFAULT 'members',
+              payment_status VARCHAR(20) DEFAULT 'unpaid',
               payment_method VARCHAR(20),
+              player_fee NUMERIC(10, 2) DEFAULT 0,
               notes TEXT,
               created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
               updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
               UNIQUE(event_id, member_id)
           )
+        `;
+        
+        // Update existing event_participants table to use new schema
+        await sql`
+          ALTER TABLE event_participants 
+          ADD COLUMN IF NOT EXISTS member_group VARCHAR(20) DEFAULT 'members',
+          ADD COLUMN IF NOT EXISTS payment_status VARCHAR(20) DEFAULT 'unpaid',
+          ADD COLUMN IF NOT EXISTS player_fee NUMERIC(10, 2) DEFAULT 0
+        `;
+        
+        // Migrate old data to new schema if columns exist
+        await sql`
+          UPDATE event_participants 
+          SET payment_status = CASE 
+                                 WHEN has_paid = true THEN 'paid'
+                                 ELSE 'unpaid'
+                               END
+          WHERE payment_status IS NULL AND has_paid IS NOT NULL
         `;
         
         console.log('✅ Database initialized successfully');
@@ -375,9 +394,10 @@ class DataStore {
       id: String(dbParticipant.id),
       eventId: String(dbParticipant.event_id),
       memberId: String(dbParticipant.member_id),
-      isPlaying: Boolean(dbParticipant.is_playing),
-      hasPaid: Boolean(dbParticipant.has_paid),
+      memberGroup: dbParticipant.member_group || 'members',
+      paymentStatus: dbParticipant.payment_status || 'unpaid',
       paymentMethod: dbParticipant.payment_method || undefined,
+      playerFee: Number(dbParticipant.player_fee) || 0,
       notes: dbParticipant.notes || '',
       createdAt: dbParticipant.created_at,
       updatedAt: dbParticipant.updated_at,
@@ -410,14 +430,14 @@ class DataStore {
 
   async addParticipantToEvent(eventId, memberId, participantData = {}) {
     await this.ensureDbInitialized();
-    const { isPlaying = false, hasPaid = false, paymentMethod, notes } = participantData;
+    const { memberGroup = 'members', paymentStatus = 'unpaid', paymentMethod, playerFee = 0, notes } = participantData;
     
     const result = await sql`
-      INSERT INTO event_participants (event_id, member_id, is_playing, has_paid, payment_method, notes) 
-      VALUES (${eventId}, ${memberId}, ${isPlaying}, ${hasPaid}, ${paymentMethod || null}, ${notes || ''}) 
+      INSERT INTO event_participants (event_id, member_id, member_group, payment_status, payment_method, player_fee, notes) 
+      VALUES (${eventId}, ${memberId}, ${memberGroup}, ${paymentStatus}, ${paymentMethod || null}, ${playerFee}, ${notes || ''}) 
       ON CONFLICT (event_id, member_id) 
-      DO UPDATE SET is_playing = ${isPlaying}, has_paid = ${hasPaid}, 
-                    payment_method = ${paymentMethod || null}, notes = ${notes || ''}, 
+      DO UPDATE SET member_group = ${memberGroup}, payment_status = ${paymentStatus}, 
+                    payment_method = ${paymentMethod || null}, player_fee = ${playerFee}, notes = ${notes || ''}, 
                     updated_at = CURRENT_TIMESTAMP
       RETURNING *
     `;
@@ -437,12 +457,12 @@ class DataStore {
 
   async updateParticipant(participantId, updates) {
     await this.ensureDbInitialized();
-    const { isPlaying, hasPaid, paymentMethod, notes } = updates;
+    const { memberGroup, paymentStatus, paymentMethod, playerFee, notes } = updates;
     
     const result = await sql`
       UPDATE event_participants 
-      SET is_playing = ${isPlaying}, has_paid = ${hasPaid}, 
-          payment_method = ${paymentMethod || null}, notes = ${notes || ''}, 
+      SET member_group = ${memberGroup || 'members'}, payment_status = ${paymentStatus || 'unpaid'}, 
+          payment_method = ${paymentMethod || null}, player_fee = ${playerFee || 0}, notes = ${notes || ''}, 
           updated_at = CURRENT_TIMESTAMP 
       WHERE id = ${participantId} 
       RETURNING *
