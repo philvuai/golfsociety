@@ -98,6 +98,38 @@ class DataStore {
           WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'viewer')
         `;
         
+        // Create members table
+        await sql`
+          CREATE TABLE IF NOT EXISTS members (
+              id SERIAL PRIMARY KEY,
+              name VARCHAR(255) NOT NULL,
+              email VARCHAR(255),
+              handicap NUMERIC(3, 1),
+              phone VARCHAR(20),
+              membership_number VARCHAR(50),
+              joined_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+              active BOOLEAN DEFAULT true,
+              created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+              updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+          )
+        `;
+        
+        // Create event_participants table
+        await sql`
+          CREATE TABLE IF NOT EXISTS event_participants (
+              id SERIAL PRIMARY KEY,
+              event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
+              member_id INTEGER REFERENCES members(id) ON DELETE CASCADE,
+              is_playing BOOLEAN DEFAULT false,
+              has_paid BOOLEAN DEFAULT false,
+              payment_method VARCHAR(20),
+              notes TEXT,
+              created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+              updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+              UNIQUE(event_id, member_id)
+          )
+        `;
+        
         console.log('✅ Database initialized successfully');
         this.dbInitialized = true;
       } catch (error) {
@@ -264,6 +296,179 @@ class DataStore {
       }
     }
     return null;
+  }
+
+  // Member Management Methods
+  mapDbMemberToFrontend(dbMember) {
+    if (!dbMember) return null;
+    
+    return {
+      id: String(dbMember.id),
+      name: dbMember.name || '',
+      email: dbMember.email || '',
+      handicap: dbMember.handicap ? Number(dbMember.handicap) : undefined,
+      phone: dbMember.phone || '',
+      membershipNumber: dbMember.membership_number || '',
+      joinedDate: dbMember.joined_date,
+      active: Boolean(dbMember.active),
+      createdAt: dbMember.created_at,
+      updatedAt: dbMember.updated_at
+    };
+  }
+
+  async getMembers() {
+    await this.ensureDbInitialized();
+    const result = await sql`SELECT * FROM members WHERE active = true ORDER BY name ASC`;
+    return result.map(member => this.mapDbMemberToFrontend(member));
+  }
+
+  async getMemberById(id) {
+    await this.ensureDbInitialized();
+    const result = await sql`SELECT * FROM members WHERE id = ${id} AND active = true`;
+    return result[0] ? this.mapDbMemberToFrontend(result[0]) : null;
+  }
+
+  async createMember(memberData) {
+    await this.ensureDbInitialized();
+    const { name, email, handicap, phone, membershipNumber } = memberData;
+    
+    const result = await sql`
+      INSERT INTO members (name, email, handicap, phone, membership_number) 
+      VALUES (${name}, ${email || null}, ${handicap || null}, ${phone || null}, ${membershipNumber || null}) 
+      RETURNING *
+    `;
+    return this.mapDbMemberToFrontend(result[0]);
+  }
+
+  async updateMember(id, updates) {
+    await this.ensureDbInitialized();
+    const { name, email, handicap, phone, membershipNumber, active } = updates;
+    
+    const result = await sql`
+      UPDATE members 
+      SET name = ${name}, email = ${email || null}, handicap = ${handicap || null}, 
+          phone = ${phone || null}, membership_number = ${membershipNumber || null}, 
+          active = ${active !== undefined ? active : true}, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ${id} 
+      RETURNING *
+    `;
+    return this.mapDbMemberToFrontend(result[0]);
+  }
+
+  async deleteMember(id) {
+    await this.ensureDbInitialized();
+    // Soft delete by setting active to false
+    const result = await sql`
+      UPDATE members 
+      SET active = false, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ${id} 
+      RETURNING *
+    `;
+    return result[0];
+  }
+
+  // Event Participants Methods
+  mapDbParticipantToFrontend(dbParticipant) {
+    if (!dbParticipant) return null;
+    
+    return {
+      id: String(dbParticipant.id),
+      eventId: String(dbParticipant.event_id),
+      memberId: String(dbParticipant.member_id),
+      isPlaying: Boolean(dbParticipant.is_playing),
+      hasPaid: Boolean(dbParticipant.has_paid),
+      paymentMethod: dbParticipant.payment_method || undefined,
+      notes: dbParticipant.notes || '',
+      createdAt: dbParticipant.created_at,
+      updatedAt: dbParticipant.updated_at,
+      member: dbParticipant.member_name ? {
+        id: String(dbParticipant.member_id),
+        name: dbParticipant.member_name,
+        email: dbParticipant.member_email,
+        handicap: dbParticipant.member_handicap ? Number(dbParticipant.member_handicap) : undefined,
+        phone: dbParticipant.member_phone,
+        membershipNumber: dbParticipant.member_membership_number,
+        joinedDate: dbParticipant.member_joined_date,
+        active: Boolean(dbParticipant.member_active)
+      } : undefined
+    };
+  }
+
+  async getEventParticipants(eventId) {
+    await this.ensureDbInitialized();
+    const result = await sql`
+      SELECT ep.*, m.name as member_name, m.email as member_email, m.handicap as member_handicap, 
+             m.phone as member_phone, m.membership_number as member_membership_number, 
+             m.joined_date as member_joined_date, m.active as member_active
+      FROM event_participants ep
+      JOIN members m ON ep.member_id = m.id
+      WHERE ep.event_id = ${eventId}
+      ORDER BY m.name ASC
+    `;
+    return result.map(participant => this.mapDbParticipantToFrontend(participant));
+  }
+
+  async addParticipantToEvent(eventId, memberId, participantData = {}) {
+    await this.ensureDbInitialized();
+    const { isPlaying = false, hasPaid = false, paymentMethod, notes } = participantData;
+    
+    const result = await sql`
+      INSERT INTO event_participants (event_id, member_id, is_playing, has_paid, payment_method, notes) 
+      VALUES (${eventId}, ${memberId}, ${isPlaying}, ${hasPaid}, ${paymentMethod || null}, ${notes || ''}) 
+      ON CONFLICT (event_id, member_id) 
+      DO UPDATE SET is_playing = ${isPlaying}, has_paid = ${hasPaid}, 
+                    payment_method = ${paymentMethod || null}, notes = ${notes || ''}, 
+                    updated_at = CURRENT_TIMESTAMP
+      RETURNING *
+    `;
+    
+    // Get the participant with member details
+    const participantWithMember = await sql`
+      SELECT ep.*, m.name as member_name, m.email as member_email, m.handicap as member_handicap, 
+             m.phone as member_phone, m.membership_number as member_membership_number, 
+             m.joined_date as member_joined_date, m.active as member_active
+      FROM event_participants ep
+      JOIN members m ON ep.member_id = m.id
+      WHERE ep.id = ${result[0].id}
+    `;
+    
+    return this.mapDbParticipantToFrontend(participantWithMember[0]);
+  }
+
+  async updateParticipant(participantId, updates) {
+    await this.ensureDbInitialized();
+    const { isPlaying, hasPaid, paymentMethod, notes } = updates;
+    
+    const result = await sql`
+      UPDATE event_participants 
+      SET is_playing = ${isPlaying}, has_paid = ${hasPaid}, 
+          payment_method = ${paymentMethod || null}, notes = ${notes || ''}, 
+          updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ${participantId} 
+      RETURNING *
+    `;
+    
+    // Get the participant with member details
+    const participantWithMember = await sql`
+      SELECT ep.*, m.name as member_name, m.email as member_email, m.handicap as member_handicap, 
+             m.phone as member_phone, m.membership_number as member_membership_number, 
+             m.joined_date as member_joined_date, m.active as member_active
+      FROM event_participants ep
+      JOIN members m ON ep.member_id = m.id
+      WHERE ep.id = ${result[0].id}
+    `;
+    
+    return this.mapDbParticipantToFrontend(participantWithMember[0]);
+  }
+
+  async removeParticipantFromEvent(eventId, memberId) {
+    await this.ensureDbInitialized();
+    const result = await sql`
+      DELETE FROM event_participants 
+      WHERE event_id = ${eventId} AND member_id = ${memberId} 
+      RETURNING *
+    `;
+    return result[0];
   }
 }
 

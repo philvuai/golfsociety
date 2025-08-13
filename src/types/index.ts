@@ -27,6 +27,7 @@ export interface Event {
   funds: Funds;
   surplus: number;
   notes: string;
+  participants?: EventParticipant[]; // Optional for backward compatibility
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string;
@@ -43,4 +44,30 @@ export interface User {
   username: string;
   role: 'admin' | 'viewer';
   isAuthenticated: boolean;
+}
+
+export interface Member {
+  id: string;
+  name: string;
+  email?: string;
+  handicap?: number;
+  phone?: string;
+  membershipNumber?: string;
+  joinedDate: string;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface EventParticipant {
+  id: string;
+  eventId: string;
+  memberId: string;
+  isPlaying: boolean;
+  hasPaid: boolean;
+  paymentMethod?: 'cash' | 'card' | 'bank_transfer';
+  notes?: string;
+  member?: Member; // Populated via JOIN
+  createdAt?: string;
+  updatedAt?: string;
 }

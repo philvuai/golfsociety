@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import { LogOut, Plus, PenTool, CheckCircle, Download, FileText, Moon, Sun } from 'lucide-react';
+import { LogOut, Plus, PenTool, CheckCircle, Download, FileText, Moon, Sun, Users, Calendar } from 'lucide-react';
 import EditSidebar from './EditSidebar';
+import MembersList from './MembersList';
 import { Event } from '../types';
 import { formatDateBritish } from '../utils/dateUtils';
 import { apiService } from '../services/api';
@@ -524,6 +525,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [editSidebarOpen, setEditSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<'events' | 'members'>('events');
 
   const activeEvent = events.find(event => event.id === activeEventId) || events[0];
 
@@ -653,8 +655,30 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         <Sidebar>
           <SidebarTitle>Welcome, {user.username}</SidebarTitle>
           
-          <EventsSection>
-            <EventsSectionTitle>In Progress</EventsSectionTitle>
+          {/* Navigation Section - Admin Only */}
+          {user.role === 'admin' && (
+            <EventsSection>
+              <EventsSectionTitle>Navigation</EventsSectionTitle>
+              <SidebarButton 
+                active={currentView === 'events'}
+                onClick={() => setCurrentView('events')}
+              >
+                <Calendar size={18} /> Events
+              </SidebarButton>
+              <SidebarButton 
+                active={currentView === 'members'}
+                onClick={() => setCurrentView('members')}
+              >
+                <Users size={18} /> Members
+              </SidebarButton>
+            </EventsSection>
+          )}
+          
+          {/* Events Navigation - Only show when in events view */}
+          {currentView === 'events' && (
+            <>
+              <EventsSection>
+                <EventsSectionTitle>In Progress</EventsSectionTitle>
             {visibleEvents.filter(e => e.status === 'in-progress').map(event => (
               <SidebarButton 
                 key={event.id} 
@@ -692,70 +716,79 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             ))}
           </EventsSection>
           
-          {user.role === 'admin' && (
-            <SidebarButton onClick={handleNewEvent}>
-              <Plus size={18} /> New Event
-            </SidebarButton>
+              {user.role === 'admin' && currentView === 'events' && (
+                <SidebarButton onClick={handleNewEvent}>
+                  <Plus size={18} /> New Event
+                </SidebarButton>
+              )}
+            </>
           )}
+          
           <SidebarButton onClick={onLogout}>
             <LogOut size={18} /> Log Out
           </SidebarButton>
         </Sidebar>
 
         <Content>
-          <Header>
-            <Title>The Golf Society Dashboard</Title>
-            <Subtitle>{user.role === 'admin' ? 'Manage your golf events, players, and finances' : 'View golf events, players, and finances'}</Subtitle>
-          </Header>
-
-          {error && (
-            <ErrorContainer>
-              {error}
-            </ErrorContainer>
-          )}
-
-          {!loading && events.length > 0 && (
+          {/* Members View - Admin Only */}
+          {currentView === 'members' && user.role === 'admin' ? (
+            <MembersList user={user} />
+          ) : (
+            /* Events View - Default */
             <>
-              <StatsBar>
-                <StatCard>
-                  <StatNumber>{totalEvents}</StatNumber>
-                  <StatCardLabel>Total Events</StatCardLabel>
-                </StatCard>
-                <StatCard>
-                  <StatNumber>£{totalRevenue.toFixed(0)}</StatNumber>
-                  <StatCardLabel>Total Revenue</StatCardLabel>
-                </StatCard>
-                <StatCard>
-                  <StatNumber>£{averageSurplus.toFixed(0)}</StatNumber>
-                  <StatCardLabel>Avg Surplus</StatCardLabel>
-                </StatCard>
-                <StatCard>
-                  <StatNumber>{upcomingEvents}</StatNumber>
-                  <StatCardLabel>Upcoming Events</StatCardLabel>
-                </StatCard>
-              </StatsBar>
-              
-              <ActionsContainer>
-                <ActionButton onClick={toggleTheme}>
-                  {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-                  {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-                </ActionButton>
-                <ActionButton onClick={() => exportToCSV(visibleEvents)}>
-                  <Download size={16} /> Export CSV
-                </ActionButton>
-                <ActionButton onClick={() => exportToPDF(visibleEvents)}>
-                  <FileText size={16} /> Export PDF
-                </ActionButton>
-              </ActionsContainer>
-            </>
-          )}
+              <Header>
+                <Title>The Golf Society Dashboard</Title>
+                <Subtitle>{user.role === 'admin' ? 'Manage your golf events, players, and finances' : 'View golf events, players, and finances'}</Subtitle>
+              </Header>
 
-          {loading ? (
-            <LoadingContainer>
-              Loading events...
-            </LoadingContainer>
-          ) : activeEvent && activeEvent.id ? (
-            <Grid>
+              {error && (
+                <ErrorContainer>
+                  {error}
+                </ErrorContainer>
+              )}
+
+              {!loading && events.length > 0 && (
+                <>
+                  <StatsBar>
+                    <StatCard>
+                      <StatNumber>{totalEvents}</StatNumber>
+                      <StatCardLabel>Total Events</StatCardLabel>
+                    </StatCard>
+                    <StatCard>
+                      <StatNumber>£{totalRevenue.toFixed(0)}</StatNumber>
+                      <StatCardLabel>Total Revenue</StatCardLabel>
+                    </StatCard>
+                    <StatCard>
+                      <StatNumber>£{averageSurplus.toFixed(0)}</StatNumber>
+                      <StatCardLabel>Avg Surplus</StatCardLabel>
+                    </StatCard>
+                    <StatCard>
+                      <StatNumber>{upcomingEvents}</StatNumber>
+                      <StatCardLabel>Upcoming Events</StatCardLabel>
+                    </StatCard>
+                  </StatsBar>
+                  
+                  <ActionsContainer>
+                    <ActionButton onClick={toggleTheme}>
+                      {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+                      {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                    </ActionButton>
+                    <ActionButton onClick={() => exportToCSV(visibleEvents)}>
+                      <Download size={16} /> Export CSV
+                    </ActionButton>
+                    <ActionButton onClick={() => exportToPDF(visibleEvents)}>
+                      <FileText size={16} /> Export PDF
+                    </ActionButton>
+                  </ActionsContainer>
+                </>
+              )}
+
+              {loading ? (
+                <LoadingContainer>
+                  Loading events...
+                </LoadingContainer>
+              ) : activeEvent && activeEvent.id ? (
+                <Grid>
               <Card>
                 <CardHeader>
                   <CardTitle>Current Event</CardTitle>
@@ -928,6 +961,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
               No events found. {user.role === 'admin' ? 'Create your first event using the + button.' : 'Please contact an admin to create events.'}
             </LoadingContainer>
           ) : null}
+            </>
+          )}
         </Content>
       </DashboardContainer>
       

@@ -1,4 +1,4 @@
-import { Event, User } from '../types';
+import { Event, User, Member, EventParticipant } from '../types';
 
 const API_BASE = process.env.NODE_ENV === 'development' 
   ? 'http://localhost:8888/.netlify/functions' 
@@ -99,6 +99,76 @@ class ApiService {
       method: 'DELETE',
     });
     return response.event;
+  }
+
+  // Members - Admin only
+  async getMembers(): Promise<Member[]> {
+    const response = await this.makeRequest('/members');
+    return response.members;
+  }
+
+  async getMember(memberId: string): Promise<Member> {
+    const response = await this.makeRequest(`/members?id=${memberId}`);
+    return response.member;
+  }
+
+  async createMember(memberData: Omit<Member, 'id' | 'createdAt' | 'updatedAt'>): Promise<Member> {
+    const response = await this.makeRequest('/members', {
+      method: 'POST',
+      body: JSON.stringify(memberData),
+    });
+    return response.member;
+  }
+
+  async updateMember(member: Member): Promise<Member> {
+    const response = await this.makeRequest('/members', {
+      method: 'PUT',
+      body: JSON.stringify(member),
+    });
+    return response.member;
+  }
+
+  async deleteMember(memberId: string): Promise<Member> {
+    const response = await this.makeRequest(`/members?id=${memberId}`, {
+      method: 'DELETE',
+    });
+    return response.member;
+  }
+
+  // Event Participants - Admin only
+  async getEventParticipants(eventId: string): Promise<EventParticipant[]> {
+    const response = await this.makeRequest(`/event-participants?eventId=${eventId}`);
+    return response.participants;
+  }
+
+  async addParticipantToEvent(
+    eventId: string, 
+    memberId: string, 
+    participantData: Partial<Pick<EventParticipant, 'isPlaying' | 'hasPaid' | 'paymentMethod' | 'notes'>>
+  ): Promise<EventParticipant> {
+    const response = await this.makeRequest('/event-participants', {
+      method: 'POST',
+      body: JSON.stringify({ eventId, memberId, ...participantData }),
+    });
+    return response.participant;
+  }
+
+  async updateParticipant(
+    participantId: string,
+    updates: Partial<Pick<EventParticipant, 'isPlaying' | 'hasPaid' | 'paymentMethod' | 'notes'>>
+  ): Promise<EventParticipant> {
+    const response = await this.makeRequest('/event-participants', {
+      method: 'PUT',
+      body: JSON.stringify({ participantId, ...updates }),
+    });
+    return response.participant;
+  }
+
+  async removeParticipantFromEvent(eventId: string, memberId: string): Promise<EventParticipant> {
+    const response = await this.makeRequest(`/event-participants?eventId=${eventId}&memberId=${memberId}`, {
+      method: 'DELETE',
+    });
+    return response.participant;
   }
 }
 
