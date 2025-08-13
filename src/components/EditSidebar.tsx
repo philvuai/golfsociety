@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { X, Save, Trash2 } from 'lucide-react';
-import { Event } from '../types';
+import { X, Save, Trash2, Plus, User } from 'lucide-react';
+import { Event, Member, EventParticipant } from '../types';
+import { apiService } from '../services/api';
 
 const SidebarOverlay = styled.div<{ isOpen: boolean }>`
   position: fixed;
@@ -124,6 +125,108 @@ const SaveButton = styled(Button)`
   margin-top: 20px;
 `;
 
+const MemberSelect = styled.div`
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  background: #f9fafb;
+`;
+
+const MemberSelectHeader = styled.div`
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 10px;
+`;
+
+const MemberItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const MemberInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+`;
+
+const MemberName = styled.span`
+  font-weight: 500;
+  color: #374151;
+`;
+
+const MemberGroup = styled.span`
+  font-size: 12px;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+`;
+
+const PaymentCheckbox = styled.input`
+  width: 18px;
+  height: 18px;
+  margin-left: 10px;
+  cursor: pointer;
+`;
+
+const RemoveMemberButton = styled.button`
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  
+  &:hover {
+    background: #dc2626;
+  }
+`;
+
+const AddMemberButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  
+  &:hover {
+    background: #059669;
+  }
+`;
+
+const MemberSelectDropdown = styled.select`
+  padding: 8px 12px;
+  border: 2px solid #e1e5e9;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  min-width: 200px;
+  
+  &:focus {
+    border-color: #2a5298;
+  }
+`;
+
 interface EditSidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -139,7 +242,10 @@ const EditSidebar: React.FC<EditSidebarProps> = ({
   onSave,
   onDelete
 }) => {
-const [eventData, setEventData] = useState<Event | null>(event);
+  const [eventData, setEventData] = useState<Event | null>(event);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [participants, setParticipants] = useState<EventParticipant[]>([]);
+  const [selectedMember, setSelectedMember] = useState<string>('');
 
   // Update local state when event prop changes
   React.useEffect(() => {
@@ -162,6 +268,97 @@ const [eventData, setEventData] = useState<Event | null>(event);
       setEventData(prev => prev ? { ...prev, surplus: calculatedSurplus } : null);
     }
   }, [calculatedSurplus, eventData?.surplus]);
+
+  // Load members when sidebar opens
+  useEffect(() => {
+    if (isOpen) {
+      const fetchMembers = async () => {
+        try {
+          const membersList = await apiService.getMembers();
+          setMembers(membersList);
+        } catch (error) {
+          console.error('Failed to load members:', error);
+        }
+      };
+      fetchMembers();
+    }
+  }, [isOpen]);
+
+  // Load participants when event changes
+  useEffect(() => {
+    if (eventData?.id) {
+      const fetchParticipants = async () => {
+        try {
+          const participantsList = await apiService.getEventParticipants(eventData.id);
+          setParticipants(participantsList);
+        } catch (error) {
+          console.error('Failed to load participants:', error);
+          setParticipants([]);
+        }
+      };
+      fetchParticipants();
+    }
+  }, [eventData?.id]);
+
+  const handleAddMember = async () => {
+    if (!selectedMember || !eventData) return;
+    
+    const member = members.find(m => m.id === selectedMember);
+    if (!member) return;
+
+    // Check if member is already added
+    if (participants.some(p => p.memberId === selectedMember)) {
+      alert('Member is already added to this event');
+      return;
+    }
+
+    try {
+      const newParticipant: Omit<EventParticipant, 'id' | 'createdAt' | 'updatedAt'> = {
+        eventId: eventData.id,
+        memberId: selectedMember,
+        memberGroup: 'members', // Default to members group
+        paymentStatus: 'unpaid',
+        playerFee: eventData.playerFee || 0
+      };
+
+      const savedParticipant = await apiService.createEventParticipant(newParticipant);
+      setParticipants([...participants, savedParticipant]);
+      setSelectedMember('');
+    } catch (error) {
+      console.error('Failed to add member:', error);
+      alert('Failed to add member to event');
+    }
+  };
+
+  const handleRemoveMember = async (participantId: string) => {
+    try {
+      await apiService.deleteEventParticipant(participantId);
+      setParticipants(participants.filter(p => p.id !== participantId));
+    } catch (error) {
+      console.error('Failed to remove member:', error);
+      alert('Failed to remove member from event');
+    }
+  };
+
+  const handlePaymentStatusChange = async (participantId: string, isPaid: boolean) => {
+    try {
+      const participant = participants.find(p => p.id === participantId);
+      if (!participant) return;
+
+      const updatedParticipant = {
+        ...participant,
+        paymentStatus: isPaid ? 'paid' as const : 'unpaid' as const
+      };
+
+      const savedParticipant = await apiService.updateEventParticipant(updatedParticipant);
+      setParticipants(participants.map(p => 
+        p.id === participantId ? savedParticipant : p
+      ));
+    } catch (error) {
+      console.error('Failed to update payment status:', error);
+      alert('Failed to update payment status');
+    }
+  };
 
   const handleSave = () => {
     if (eventData) {
@@ -227,6 +424,80 @@ const [eventData, setEventData] = useState<Event | null>(event);
               <option value="in-progress">In Progress</option>
               <option value="completed">Completed</option>
             </select>
+          </Section>
+
+          <Section>
+            <SectionTitle><User size={20} style={{ display: 'inline', marginRight: '8px' }} />Event Participants</SectionTitle>
+            <MemberSelect>
+              <MemberSelectHeader>
+                <MemberSelectDropdown
+                  value={selectedMember}
+                  onChange={(e) => setSelectedMember(e.target.value)}
+                >
+                  <option value="">Select a member...</option>
+                  {members
+                    .filter(member => !participants.some(p => p.memberId === member.id))
+                    .map(member => (
+                    <option key={member.id} value={member.id}>
+                      {member.name} {member.handicap ? `(${member.handicap})` : ''}
+                    </option>
+                  ))}
+                </MemberSelectDropdown>
+                <AddMemberButton 
+                  onClick={handleAddMember}
+                  disabled={!selectedMember}
+                >
+                  <Plus size={16} /> Add
+                </AddMemberButton>
+              </MemberSelectHeader>
+              
+              {participants.map(participant => {
+                const member = members.find(m => m.id === participant.memberId);
+                if (!member) return null;
+                
+                return (
+                  <MemberItem key={participant.id}>
+                    <MemberInfo>
+                      <MemberName>{member.name}</MemberName>
+                      <MemberGroup>{participant.memberGroup}</MemberGroup>
+                      {member.handicap && (
+                        <MemberGroup>H{member.handicap}</MemberGroup>
+                      )}
+                    </MemberInfo>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <label style={{ fontSize: '12px', color: '#6b7280' }}>Paid:</label>
+                      <PaymentCheckbox
+                        type="checkbox"
+                        checked={participant.paymentStatus === 'paid'}
+                        onChange={(e) => handlePaymentStatusChange(participant.id, e.target.checked)}
+                      />
+                      <RemoveMemberButton
+                        onClick={() => handleRemoveMember(participant.id)}
+                      >
+                        ×
+                      </RemoveMemberButton>
+                    </div>
+                  </MemberItem>
+                );
+              })}
+              
+              {participants.length === 0 && (
+                <div style={{ 
+                  textAlign: 'center', 
+                  color: '#6b7280', 
+                  fontSize: '14px', 
+                  padding: '20px 10px' 
+                }}>
+                  No participants selected. Choose members from the dropdown above.
+                </div>
+              )}
+            </MemberSelect>
+            
+            <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '10px' }}>
+              Total participants: {participants.length} | 
+              Paid: {participants.filter(p => p.paymentStatus === 'paid').length} | 
+              Unpaid: {participants.filter(p => p.paymentStatus === 'unpaid').length}
+            </div>
           </Section>
 
           <Section>
