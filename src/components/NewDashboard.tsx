@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { LogOut, Plus, PenTool, CheckCircle, Download, FileText, Moon, Sun, Users, Calendar } from 'lucide-react';
 import EditSidebar from './EditSidebar';
 import MembersList from './MembersList';
-import { Event } from '../types';
+import { Event, EventParticipant } from '../types';
 import { formatDateBritish } from '../utils/dateUtils';
 import { apiService } from '../services/api';
 import { useTheme, Theme } from '../contexts/ThemeContext';
@@ -432,6 +432,124 @@ const NotesText = styled.div`
   white-space: pre-wrap;
 `;
 
+const ParticipantsCard = styled(Card)`
+  grid-column: 1 / -1;
+`;
+
+const ParticipantsList = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+`;
+
+const ParticipantItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: ${props => props.theme.colors.surface};
+  border: 1px solid ${props => props.theme.colors.border.light};
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: ${props => props.theme.colors.accent.primary};
+    transform: translateY(-2px);
+    box-shadow: ${props => props.theme.shadows.small};
+  }
+`;
+
+const ParticipantInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+`;
+
+const ParticipantName = styled.div`
+  font-weight: 600;
+  color: ${props => props.theme.colors.text.primary};
+  font-size: 14px;
+`;
+
+const ParticipantDetails = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: ${props => props.theme.colors.text.secondary};
+`;
+
+const ParticipantBadge = styled.span<{ variant: 'group' | 'handicap' }>`
+  background: ${props => 
+    props.variant === 'group' ? props.theme.colors.accent.primary : props.theme.colors.surface
+  };
+  color: ${props => 
+    props.variant === 'group' ? 'white' : props.theme.colors.text.secondary
+  };
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: capitalize;
+`;
+
+const PaymentStatus = styled.div<{ isPaid: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background: ${props => props.isPaid ? '#dcfce7' : '#fef3c7'};
+  color: ${props => props.isPaid ? '#15803d' : '#d97706'};
+  border: 1px solid ${props => props.isPaid ? '#bbf7d0' : '#fed7aa'};
+`;
+
+const PaymentIndicator = styled.div<{ isPaid: boolean }>`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: ${props => props.isPaid ? '#15803d' : '#d97706'};
+`;
+
+const ParticipantsSummary = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  background: ${props => props.theme.colors.surface};
+  border: 1px solid ${props => props.theme.colors.border.light};
+  border-radius: 12px;
+  margin-bottom: 16px;
+`;
+
+const SummaryItem = styled.div`
+  text-align: center;
+`;
+
+const SummaryNumber = styled.div`
+  font-size: 24px;
+  font-weight: 700;
+  color: ${props => props.theme.colors.text.primary};
+  margin-bottom: 4px;
+`;
+
+const SummaryLabel = styled.div`
+  font-size: 11px;
+  color: ${props => props.theme.colors.text.secondary};
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
 const LoadingContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -526,6 +644,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'events' | 'members'>('events');
+  const [participants, setParticipants] = useState<EventParticipant[]>([]);
 
   const activeEvent = events.find(event => event.id === activeEventId) || events[0];
 
@@ -548,6 +667,25 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
+
+  // Load participants when active event changes
+  useEffect(() => {
+    const loadParticipants = async () => {
+      if (activeEvent?.id) {
+        try {
+          const eventParticipants = await apiService.getEventParticipants(activeEvent.id);
+          setParticipants(eventParticipants);
+        } catch (error) {
+          console.error('Failed to load participants:', error);
+          setParticipants([]);
+        }
+      } else {
+        setParticipants([]);
+      }
+    };
+
+    loadParticipants();
+  }, [activeEvent?.id]);
 
   const handleSaveData = async (updatedEvent: Event) => {
     try {
@@ -955,6 +1093,63 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                   <NotesText>{activeEvent.notes}</NotesText>
                 </CardContent>
               </NotesCard>
+
+              {participants.length > 0 && (
+                <ParticipantsCard>
+                  <CardHeader>
+                    <CardTitle>Event Participants ({participants.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Participants Summary */}
+                    <ParticipantsSummary>
+                      <SummaryItem>
+                        <SummaryNumber>{participants.length}</SummaryNumber>
+                        <SummaryLabel>Total</SummaryLabel>
+                      </SummaryItem>
+                      <SummaryItem>
+                        <SummaryNumber>{participants.filter(p => p.paymentStatus === 'paid').length}</SummaryNumber>
+                        <SummaryLabel>Paid</SummaryLabel>
+                      </SummaryItem>
+                      <SummaryItem>
+                        <SummaryNumber>{participants.filter(p => p.paymentStatus === 'unpaid').length}</SummaryNumber>
+                        <SummaryLabel>Unpaid</SummaryLabel>
+                      </SummaryItem>
+                      <SummaryItem>
+                        <SummaryNumber>{participants.filter(p => p.paymentStatus === 'pending').length}</SummaryNumber>
+                        <SummaryLabel>Pending</SummaryLabel>
+                      </SummaryItem>
+                    </ParticipantsSummary>
+
+                    {/* Participants List */}
+                    <ParticipantsList>
+                      {participants.map((participant) => (
+                        <ParticipantItem key={participant.id}>
+                          <ParticipantInfo>
+                            <ParticipantName>{participant.name}</ParticipantName>
+                            <ParticipantDetails>
+                              {participant.membershipType && (
+                                <ParticipantBadge variant="group">
+                                  {participant.membershipType}
+                                </ParticipantBadge>
+                              )}
+                              {participant.handicap && (
+                                <ParticipantBadge variant="handicap">
+                                  HCP: {participant.handicap}
+                                </ParticipantBadge>
+                              )}
+                            </ParticipantDetails>
+                          </ParticipantInfo>
+                          <PaymentStatus isPaid={participant.paymentStatus === 'paid'}>
+                            <PaymentIndicator isPaid={participant.paymentStatus === 'paid'} />
+                            {participant.paymentStatus === 'paid' ? 'Paid' : 
+                             participant.paymentStatus === 'pending' ? 'Pending' : 'Unpaid'}
+                          </PaymentStatus>
+                        </ParticipantItem>
+                      ))}
+                    </ParticipantsList>
+                  </CardContent>
+                </ParticipantsCard>
+              )}
             </Grid>
           ) : !loading && events.length === 0 ? (
             <LoadingContainer>
