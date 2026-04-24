@@ -42,6 +42,32 @@ const TotalRow = styled(Row)`
   padding-top: 12px; margin-top: 8px; font-weight: 600;
 `;
 
+const StatusBadge = styled.span<{ status: string }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  background: ${p =>
+    p.status === 'completed' ? '#dcfce7' :
+    p.status === 'in-progress' ? '#dbeafe' : '#fef3c7'};
+  color: ${p =>
+    p.status === 'completed' ? '#15803d' :
+    p.status === 'in-progress' ? '#1e40af' : '#d97706'};
+  border: 1px solid ${p =>
+    p.status === 'completed' ? '#bbf7d0' :
+    p.status === 'in-progress' ? '#bfdbfe' : '#fed7aa'};
+`;
+
+const StatusDot = styled.div<{ status: string }>`
+  width: 8px; height: 8px; border-radius: 50%;
+  background: ${p =>
+    p.status === 'completed' ? '#15803d' :
+    p.status === 'in-progress' ? '#1e40af' : '#d97706'};
+`;
+
 interface Props {
   event: Event;
   participants: EventParticipant[];
@@ -61,7 +87,7 @@ const EventDetail: React.FC<Props> = ({ event, participants }) => {
           <EventInfo>
             <Row><Label>Event:</Label><Value>{event.name}</Value></Row>
             <Row><Label>Location:</Label><Value>{event.location || 'TBD'}</Value></Row>
-            <Row><Label>Status:</Label><Value>{event.status}</Value></Row>
+            <Row><Label>Status:</Label><StatusBadge status={event.status}><StatusDot status={event.status} />{event.status === 'in-progress' ? 'In Progress' : event.status.charAt(0).toUpperCase() + event.status.slice(1)}</StatusBadge></Row>
             <Row><Label>Total Players:</Label><Value>{(event.playerCount || 0) + (event.playerCount2 || 0)}</Value></Row>
             <Row><Label>Date:</Label><Value>{formatDateBritish(event.date)}</Value></Row>
           </EventInfo>

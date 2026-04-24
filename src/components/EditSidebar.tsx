@@ -200,6 +200,13 @@ const EditSidebar: React.FC<EditSidebarProps> = ({ isOpen, onClose, event, onSav
 
   useEffect(() => { setEventData(event); }, [event]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [isOpen, onClose]);
+
   const calculatedSurplus = useMemo(() => {
     if (!eventData) return 0;
     const i1 = (eventData.playerFee || 0) * (eventData.playerCount || 0);
@@ -208,9 +215,10 @@ const EditSidebar: React.FC<EditSidebarProps> = ({ isOpen, onClose, event, onSav
   }, [eventData?.playerFee, eventData?.playerCount, eventData?.playerFee2, eventData?.playerCount2, eventData?.courseFee]);
 
   useEffect(() => {
-    if (eventData && calculatedSurplus !== eventData.surplus) {
-      setEventData(prev => prev ? { ...prev, surplus: calculatedSurplus } : null);
-    }
+    setEventData(prev => {
+      if (!prev || calculatedSurplus === prev.surplus) return prev;
+      return { ...prev, surplus: calculatedSurplus };
+    });
   }, [calculatedSurplus]);
 
   useEffect(() => {

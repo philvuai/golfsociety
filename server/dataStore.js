@@ -39,7 +39,6 @@ class DataStore {
       date: dbEvent.date,
       location: dbEvent.location || '',
       status: dbEvent.status || 'upcoming',
-      players: [],
       playerCount: Number(dbEvent.player_count) || 0,
       playerFee: Number(dbEvent.player_fee) || 0,
       playerGroup1Name: dbEvent.player_group_1_name || 'Members',
@@ -116,7 +115,7 @@ class DataStore {
       }
 
       if (isValidPassword) {
-        return { id: user.id, username: user.username, role: user.role, isAuthenticated: true };
+        return { id: user.id, username: user.username, role: user.role };
       }
     }
     return null;

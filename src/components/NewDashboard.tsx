@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { PenTool, CheckCircle } from 'lucide-react';
 import EventSidebar from './dashboard/EventSidebar';
@@ -87,8 +87,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const { theme } = useTheme();
   const { showToast } = useToast();
 
-  const visibleEvents = events.filter(e => !e.deletedAt);
-  const activeEvent = visibleEvents.find(e => e.id === activeEventId) || visibleEvents[0];
+  const activeEvent = events.find(e => e.id === activeEventId) || events[0];
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
@@ -107,11 +106,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
   useEffect(() => {
-    if (!activeEvent?.id) { setParticipants([]); return; }
+    if (!activeEvent?.id || user.role !== 'admin') { setParticipants([]); return; }
     apiService.getEventParticipants(activeEvent.id)
       .then(setParticipants)
       .catch(() => setParticipants([]));
-  }, [activeEvent?.id]);
+  }, [activeEvent?.id, user.role]);
 
   const handleSave = async (updatedEvent: Event) => {
     try {
@@ -142,8 +141,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       await apiService.deleteEvent(eventId);
       setEvents(prev => prev.filter(e => e.id !== eventId));
       if (activeEventId === eventId) {
-        const next = events.find(e => e.id !== eventId);
-        setActiveEventId(next ? next.id : null);
+        const remaining = events.filter(e => e.id !== eventId);
+        setActiveEventId(remaining.length > 0 ? remaining[0].id : null);
       }
       showToast('Event deleted', 'success');
     } catch {
@@ -163,20 +162,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     }
   };
 
-  const newEventTemplate: Event = {
+  const newEventTemplate = useMemo<Event>(() => ({
     id: '', name: 'New Event', date: new Date().toISOString(), location: '', status: 'upcoming',
     playerCount: 0, playerFee: 0, playerGroup1Name: 'Members',
     playerCount2: 0, playerFee2: 0, playerGroup2Name: 'Guests',
     levy1Name: 'Leicestershire', levy1Value: 0, levy2Name: 'Regional', levy2Value: 0,
     courseFee: 0, cashInBank: 0, funds: { bankTransfer: 0, cash: 0, card: 0 }, surplus: 0, notes: ''
-  };
+  }), [editingNewEvent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <StyledThemeProvider theme={theme}>
       <Container>
         <EventSidebar
           user={user}
-          events={visibleEvents}
+          events={events}
           activeEventId={activeEventId}
           currentView={currentView}
           onSelectEvent={setActiveEventId}
@@ -197,10 +196,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
               {error && <ErrorContainer>{error}</ErrorContainer>}
 
-              {!loading && visibleEvents.length > 0 && (
+              {!loading && events.length > 0 && (
                 <>
-                  <StatsBar events={visibleEvents} />
-                  <ExportActions events={visibleEvents} />
+                  <StatsBar events={events} />
+                  <ExportActions events={events} />
                 </>
               )}
 

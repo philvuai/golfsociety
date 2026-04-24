@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { LogOut, Plus, Calendar, Users, Menu, X, Search } from 'lucide-react';
+import { LogOut, Plus, Calendar, Users, Menu, Search } from 'lucide-react';
 import { Event } from '../../types';
 
 const SidebarWrapper = styled.div<{ isOpen: boolean }>`
@@ -199,12 +199,6 @@ const EventSidebar: React.FC<Props> = ({ user, events, activeEventId, currentVie
       </MobileHeader>
       <Overlay isOpen={mobileOpen} onClick={() => setMobileOpen(false)} />
       <SidebarWrapper isOpen={mobileOpen}>
-        <div style={{ display: 'none' }}>
-          {/* Close button for mobile */}
-        </div>
-        <div className="mobile-close" style={{ display: 'none' }}>
-          <HamburgerBtn onClick={() => setMobileOpen(false)}><X size={20} /></HamburgerBtn>
-        </div>
         {sidebarContent}
       </SidebarWrapper>
     </>

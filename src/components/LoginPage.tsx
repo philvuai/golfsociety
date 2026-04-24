@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { User, Lock } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
+import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 
 const LoginContainer = styled.div`
   display: flex;
@@ -8,13 +10,15 @@ const LoginContainer = styled.div`
   align-items: center;
   min-height: 100vh;
   padding: 20px;
+  background: ${p => p.theme.colors.background};
 `;
 
 const LoginCard = styled.div`
-  background: white;
+  background: ${p => p.theme.colors.surfaceElevated};
   border-radius: 20px;
   padding: 40px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: ${p => p.theme.shadows.xl};
+  border: 1px solid ${p => p.theme.colors.border.medium};
   max-width: 400px;
   width: 100%;
 `;
@@ -25,13 +29,13 @@ const Logo = styled.div`
 `;
 
 const Title = styled.h1`
-  color: #1e3c72;
+  color: ${p => p.theme.colors.text.primary};
   font-size: 28px;
   margin-bottom: 10px;
 `;
 
 const Subtitle = styled.p`
-  color: #666;
+  color: ${p => p.theme.colors.text.secondary};
   font-size: 16px;
 `;
 
@@ -50,28 +54,31 @@ const InputIcon = styled.div`
   left: 15px;
   top: 50%;
   transform: translateY(-50%);
-  color: #666;
+  color: ${p => p.theme.colors.text.tertiary};
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 15px 15px 15px 45px;
-  border: 2px solid #e1e5e9;
+  border: 2px solid ${p => p.theme.colors.border.medium};
   border-radius: 10px;
   font-size: 16px;
+  background: ${p => p.theme.colors.surface};
+  color: ${p => p.theme.colors.text.primary};
   transition: border-color 0.3s ease;
 
   &:focus {
-    border-color: #2a5298;
+    border-color: ${p => p.theme.colors.accent.primary};
+    outline: none;
   }
 
   &::placeholder {
-    color: #999;
+    color: ${p => p.theme.colors.text.tertiary};
   }
 `;
 
 const LoginButton = styled.button`
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  background: ${p => p.theme.colors.gradient.secondary};
   color: white;
   padding: 15px;
   border-radius: 10px;
@@ -91,7 +98,7 @@ const LoginButton = styled.button`
 `;
 
 const ErrorMessage = styled.div`
-  color: #e74c3c;
+  color: ${p => p.theme.colors.status.error};
   text-align: center;
   margin-top: 10px;
   font-size: 14px;
@@ -106,6 +113,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { theme } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,48 +133,51 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   };
 
   return (
-    <LoginContainer>
-      <LoginCard>
-        <Logo>
-          <Title>The Golf Society</Title>
-          <Subtitle>Dashboard Access</Subtitle>
-        </Logo>
-        
-        <Form onSubmit={handleSubmit}>
-          <InputGroup>
-            <InputIcon>
-              <User size={20} />
-            </InputIcon>
-            <Input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </InputGroup>
-          
-          <InputGroup>
-            <InputIcon>
-              <Lock size={20} />
-            </InputIcon>
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </InputGroup>
-          
-          <LoginButton type="submit" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
-          </LoginButton>
-          
-          {error && <ErrorMessage>{error}</ErrorMessage>}
-        </Form>
-      </LoginCard>
-    </LoginContainer>
+    <StyledThemeProvider theme={theme}>
+      <LoginContainer>
+        <LoginCard>
+          <Logo>
+            <Title>The Golf Society</Title>
+            <Subtitle>Dashboard Access</Subtitle>
+          </Logo>
+
+          <Form onSubmit={handleSubmit}>
+            <InputGroup>
+              <InputIcon>
+                <User size={20} />
+              </InputIcon>
+              <Input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                autoFocus
+              />
+            </InputGroup>
+
+            <InputGroup>
+              <InputIcon>
+                <Lock size={20} />
+              </InputIcon>
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </InputGroup>
+
+            <LoginButton type="submit" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In'}
+            </LoginButton>
+
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+          </Form>
+        </LoginCard>
+      </LoginContainer>
+    </StyledThemeProvider>
   );
 };
 
