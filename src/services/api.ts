@@ -1,4 +1,4 @@
-import { Event, User, Member, EventParticipant } from '../types';
+import { Event, User, Member, EventParticipant, Scorecard, LeaderboardEntry } from '../types';
 
 const API_BASE = '/api';
 
@@ -200,6 +200,36 @@ class ApiService {
       method: 'DELETE',
     });
     return response.participant;
+  }
+
+  // Scorecards
+  async getScorecards(eventId: string): Promise<Scorecard[]> {
+    const response = await this.makeRequest(`/scorecards?eventId=${eventId}`);
+    return response.scorecards;
+  }
+
+  async upsertScorecard(data: Partial<Scorecard> & { eventId: string; memberId: string }): Promise<Scorecard> {
+    const response = await this.makeRequest('/scorecards', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response.scorecard;
+  }
+
+  async deleteScorecard(id: string): Promise<void> {
+    await this.makeRequest(`/scorecards?id=${id}`, { method: 'DELETE' });
+  }
+
+  // Leaderboard
+  async getLeaderboard(season: number): Promise<LeaderboardEntry[]> {
+    const response = await this.makeRequest(`/leaderboard?season=${season}`);
+    return response.entries;
+  }
+
+  // Weather
+  async getWeather(location: string): Promise<any> {
+    const response = await this.makeRequest(`/weather?location=${encodeURIComponent(location)}`);
+    return response.weather;
   }
 }
 

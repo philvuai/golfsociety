@@ -246,6 +246,93 @@ class DataStore {
     const result = await this.query('DELETE FROM event_participants WHERE event_id=$1 AND member_id=$2 RETURNING *', [eventId, memberId]);
     return result.rows[0];
   }
+
+  // Scorecards
+  mapDbScorecardToFrontend(row) {
+    if (!row) return null;
+    return {
+      id: String(row.id),
+      eventId: String(row.event_id),
+      memberId: String(row.member_id),
+      score: row.score != null ? Number(row.score) : undefined,
+      stablefordPoints: row.stableford_points != null ? Number(row.stableford_points) : undefined,
+      handicapAtTime: row.handicap_at_time != null ? Number(row.handicap_at_time) : undefined,
+      nearestPin: Boolean(row.nearest_pin),
+      longestDrive: Boolean(row.longest_drive),
+      position: row.position != null ? Number(row.position) : undefined,
+      notes: row.notes || '',
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      member: row.member_name ? {
+        id: String(row.member_id),
+        name: row.member_name,
+        handicap: row.member_handicap != null ? Number(row.member_handicap) : undefined,
+      } : undefined,
+    };
+  }
+
+  async getScorecardsForEvent(eventId) {
+    const result = await this.query(
+      `SELECT s.*, m.name as member_name, m.handicap as member_handicap
+       FROM scorecards s JOIN members m ON s.member_id = m.id
+       WHERE s.event_id = $1 ORDER BY s.position ASC NULLS LAST, s.stableford_points DESC NULLS LAST`,
+      [eventId]
+    );
+    return result.rows.map(r => this.mapDbScorecardToFrontend(r));
+  }
+
+  async upsertScorecard(data) {
+    const { eventId, memberId, score, stablefordPoints, handicapAtTime, nearestPin, longestDrive, position, notes } = data;
+    const result = await this.query(
+      `INSERT INTO scorecards (event_id, member_id, score, stableford_points, handicap_at_time, nearest_pin, longest_drive, position, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       ON CONFLICT (event_id, member_id) DO UPDATE SET
+         score=$3, stableford_points=$4, handicap_at_time=$5, nearest_pin=$6, longest_drive=$7, position=$8, notes=$9, updated_at=CURRENT_TIMESTAMP
+       RETURNING *`,
+      [eventId, memberId, score || null, stablefordPoints || null, handicapAtTime || null, nearestPin || false, longestDrive || false, position || null, notes || '']
+    );
+    const withMember = await this.query(
+      `SELECT s.*, m.name as member_name, m.handicap as member_handicap
+       FROM scorecards s JOIN members m ON s.member_id = m.id WHERE s.id = $1`,
+      [result.rows[0].id]
+    );
+    return this.mapDbScorecardToFrontend(withMember.rows[0]);
+  }
+
+  async deleteScorecard(id) {
+    await this.query('DELETE FROM scorecards WHERE id = $1', [id]);
+  }
+
+  async getLeaderboard(season) {
+    const result = await this.query(
+      `SELECT
+         s.member_id,
+         m.name as member_name,
+         COUNT(DISTINCT s.event_id) as events_played,
+         COALESCE(SUM(s.stableford_points), 0) as total_points,
+         ROUND(AVG(s.score)::numeric, 1) as avg_score,
+         MIN(s.position) as best_position,
+         SUM(CASE WHEN s.nearest_pin THEN 1 ELSE 0 END) as ntp_count,
+         SUM(CASE WHEN s.longest_drive THEN 1 ELSE 0 END) as ld_count
+       FROM scorecards s
+       JOIN members m ON s.member_id = m.id
+       JOIN events e ON s.event_id = e.id
+       WHERE EXTRACT(YEAR FROM e.date) = $1 AND e.deleted_at IS NULL
+       GROUP BY s.member_id, m.name
+       ORDER BY total_points DESC, events_played DESC`,
+      [season]
+    );
+    return result.rows.map(r => ({
+      memberId: String(r.member_id),
+      memberName: r.member_name,
+      eventsPlayed: Number(r.events_played),
+      totalPoints: Number(r.total_points),
+      avgScore: r.avg_score != null ? Number(r.avg_score) : null,
+      bestPosition: r.best_position != null ? Number(r.best_position) : null,
+      ntpCount: Number(r.ntp_count),
+      ldCount: Number(r.ld_count),
+    }));
+  }
 }
 
 module.exports = DataStore;

@@ -204,6 +204,111 @@ app.delete('/api/event-participants', requireAdmin, async (req, res) => {
   }
 });
 
+// Scorecards
+app.get('/api/scorecards', async (req, res) => {
+  try {
+    const eventId = req.query.eventId;
+    if (!eventId) return res.status(400).json({ error: 'Event ID is required' });
+    const dataStore = new DataStore();
+    const scorecards = await dataStore.getScorecardsForEvent(eventId);
+    res.json({ success: true, scorecards });
+  } catch (error) {
+    console.error('Scorecards error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+app.post('/api/scorecards', requireAdmin, async (req, res) => {
+  try {
+    const { eventId, memberId } = req.body;
+    if (!eventId || !memberId) return res.status(400).json({ error: 'Event ID and Member ID are required' });
+    const dataStore = new DataStore();
+    const scorecard = await dataStore.upsertScorecard(req.body);
+    res.status(201).json({ success: true, scorecard });
+  } catch (error) {
+    console.error('Scorecards error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+app.delete('/api/scorecards', requireAdmin, async (req, res) => {
+  try {
+    const id = req.query.id;
+    if (!id) return res.status(400).json({ error: 'Scorecard ID is required' });
+    const dataStore = new DataStore();
+    await dataStore.deleteScorecard(id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Scorecards error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+// Leaderboard
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const season = req.query.season || new Date().getFullYear();
+    const dataStore = new DataStore();
+    const entries = await dataStore.getLeaderboard(Number(season));
+    res.json({ success: true, entries });
+  } catch (error) {
+    console.error('Leaderboard error:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
+// Weather proxy (Open-Meteo, free, no key)
+const weatherCache = new Map();
+app.get('/api/weather', async (req, res) => {
+  try {
+    const location = req.query.location;
+    if (!location) return res.status(400).json({ error: 'Location is required' });
+
+    const cacheKey = location.toLowerCase().trim();
+    const cached = weatherCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < 30 * 60 * 1000) {
+      return res.json({ success: true, weather: cached.data });
+    }
+
+    // Geocode location name to lat/lon
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=en&format=json`);
+    const geoData = await geoRes.json();
+    if (!geoData.results || geoData.results.length === 0) {
+      return res.status(404).json({ error: 'Location not found' });
+    }
+
+    const { latitude, longitude, name: resolvedName } = geoData.results[0];
+
+    // Get weather
+    const weatherRes = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Europe%2FLondon&forecast_days=5`
+    );
+    const weatherData = await weatherRes.json();
+
+    const result = {
+      location: resolvedName,
+      current: weatherData.current ? {
+        temperature: weatherData.current.temperature_2m,
+        weatherCode: weatherData.current.weather_code,
+        windSpeed: weatherData.current.wind_speed_10m,
+      } : null,
+      daily: (weatherData.daily?.time || []).map((date, i) => ({
+        date,
+        weatherCode: weatherData.daily.weather_code[i],
+        tempMax: weatherData.daily.temperature_2m_max[i],
+        tempMin: weatherData.daily.temperature_2m_min[i],
+        rainChance: weatherData.daily.precipitation_probability_max[i],
+      })),
+    };
+
+    weatherCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    res.json({ success: true, weather: result });
+  } catch (error) {
+    console.error('Weather error:', error);
+    res.status(500).json({ error: 'Failed to fetch weather data' });
+  }
+});
+
 app.listen(PORT, '127.0.0.1', () => {
   console.log(`Golf Society API running on port ${PORT}`);
 });

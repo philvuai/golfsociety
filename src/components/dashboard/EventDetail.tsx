@@ -4,6 +4,8 @@ import { Event, EventParticipant } from '../../types';
 import { formatDateBritish } from '../../utils/dateUtils';
 import { Card, CardHeader, CardTitle, CardContent } from '../common/Card';
 import ParticipantsSection from './ParticipantsSection';
+import ScorecardEntry from './ScorecardEntry';
+import WeatherWidget from './WeatherWidget';
 
 const Grid = styled.div`
   display: grid;
@@ -71,9 +73,10 @@ const StatusDot = styled.div<{ status: string }>`
 interface Props {
   event: Event;
   participants: EventParticipant[];
+  isAdmin?: boolean;
 }
 
-const EventDetail: React.FC<Props> = ({ event, participants }) => {
+const EventDetail: React.FC<Props> = ({ event, participants, isAdmin = false }) => {
   const totalFunds = (event.funds?.bankTransfer || 0) + (event.funds?.cash || 0) + (event.funds?.card || 0);
   const income1 = (event.playerFee || 0) * (event.playerCount || 0);
   const income2 = (event.playerFee2 || 0) * (event.playerCount2 || 0);
@@ -155,12 +158,22 @@ const EventDetail: React.FC<Props> = ({ event, participants }) => {
         </CardContent>
       </SurplusCard>
 
+      {event.location && (event.status === 'upcoming' || event.status === 'in-progress') && (
+        <Card style={{ gridColumn: '1 / -1' }}>
+          <CardContent>
+            <WeatherWidget location={event.location} />
+          </CardContent>
+        </Card>
+      )}
+
       {event.notes && (
         <NotesCard>
           <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
           <CardContent><NotesText>{event.notes}</NotesText></CardContent>
         </NotesCard>
       )}
+
+      <ScorecardEntry eventId={event.id} isAdmin={isAdmin} />
 
       <ParticipantsSection participants={participants} />
     </Grid>

@@ -63,3 +63,30 @@ export interface EventParticipant {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface Scorecard {
+  id: string;
+  eventId: string;
+  memberId: string;
+  score?: number;
+  stablefordPoints?: number;
+  handicapAtTime?: number;
+  nearestPin: boolean;
+  longestDrive: boolean;
+  position?: number;
+  notes?: string;
+  member?: Member;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface LeaderboardEntry {
+  memberId: string;
+  memberName: string;
+  eventsPlayed: number;
+  totalPoints: number;
+  avgScore: number | null;
+  bestPosition: number | null;
+  ntpCount: number;
+  ldCount: number;
+}

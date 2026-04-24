@@ -1,8 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Download, FileText, Moon, Sun } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
 import { Event } from '../../types';
-import { useTheme } from '../../contexts/ThemeContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -90,14 +89,8 @@ interface ExportActionsProps {
 }
 
 const ExportActions: React.FC<ExportActionsProps> = ({ events }) => {
-  const { toggleTheme, isDarkMode } = useTheme();
-
   return (
     <Container>
-      <ActionButton onClick={toggleTheme}>
-        {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-        {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-      </ActionButton>
       <ActionButton onClick={() => exportToCSV(events)}>
         <Download size={16} /> Export CSV
       </ActionButton>
