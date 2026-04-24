@@ -1,8 +1,6 @@
 import { Event, User, Member, EventParticipant } from '../types';
 
-const API_BASE = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:8888/.netlify/functions' 
-  : '/.netlify/functions';
+const API_BASE = '/api';
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {
