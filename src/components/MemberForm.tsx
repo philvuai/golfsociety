@@ -99,22 +99,6 @@ const Input = styled.input`
   }
 `;
 
-const TextArea = styled.textarea`
-  width: 100%;
-  padding: 12px 14px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
-  min-height: 80px;
-  resize: vertical;
-  transition: border-color 0.2s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: #3b82f6;
-  }
-`;
-
 const FormRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;

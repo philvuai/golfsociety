@@ -3,11 +3,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import styled from 'styled-components';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/NewDashboard';
-import Loading from './components/Loading';
 import { GlobalStyles } from './styles/GlobalStyles';
 import { apiService } from './services/api';
 import { User } from './types';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ToastProvider } from './contexts/ToastContext';
+import ToastContainer from './components/common/Toast';
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -16,27 +17,13 @@ const AppContainer = styled.div`
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [stylesLoaded, setStylesLoaded] = useState(false);
 
   useEffect(() => {
-    // Add a small delay to ensure styled-components are fully loaded
-    const loadApp = async () => {
-      // Check for existing session
-      const savedUser = localStorage.getItem('golf-society-user');
-      if (savedUser) {
-        const user = JSON.parse(savedUser);
-        setUser(user);
-        apiService.setUser(user);
-      }
-      
-      // Small delay to ensure styles are applied
-      await new Promise(resolve => setTimeout(resolve, 100));
-      setStylesLoaded(true);
-      setLoading(false);
-    };
-    
-    loadApp();
+    const savedUser = localStorage.getItem('golf-society-user');
+    const savedToken = localStorage.getItem('golf-society-token');
+    if (savedUser && savedToken) {
+      setUser(JSON.parse(savedUser));
+    }
   }, []);
 
   const handleLogin = async (username: string, password: string) => {
@@ -53,40 +40,34 @@ function App() {
 
   const handleLogout = () => {
     setUser(null);
-    apiService.setUser(null);
-    localStorage.removeItem('golf-society-user');
+    apiService.logout();
   };
-
-  if (loading || !stylesLoaded) {
-    return <Loading />;
-  }
 
   return (
     <ThemeProvider>
+      <ToastProvider>
       <Router>
         <AppContainer>
           <GlobalStyles />
+          <ToastContainer />
           <Routes>
-            <Route 
-              path="/login" 
+            <Route
+              path="/login"
               element={
-                user?.isAuthenticated ? 
-                <Navigate to="/dashboard" replace /> : 
-                <LoginPage onLogin={handleLogin} />
-              } 
+                user ? <Navigate to="/dashboard" replace /> : <LoginPage onLogin={handleLogin} />
+              }
             />
-            <Route 
-              path="/dashboard" 
+            <Route
+              path="/dashboard"
               element={
-                user?.isAuthenticated ? 
-                <Dashboard user={user} onLogout={handleLogout} /> : 
-                <Navigate to="/login" replace />
-              } 
+                user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" replace />
+              }
             />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </AppContainer>
       </Router>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

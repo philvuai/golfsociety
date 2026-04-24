@@ -1,34 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const DataStore = require('./dataStore');
+const { generateToken, verifyToken, requireAdmin } = require('./auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'https://golfsociety.uk',
+  credentials: true,
+}));
 app.use(express.json());
 
-function checkAuth(req) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return null;
-  try {
-    return JSON.parse(authHeader.replace('Bearer ', ''));
-  } catch { return null; }
-}
-
-function requireAuth(req, res) {
-  const user = checkAuth(req);
-  if (!user) { res.status(401).json({ error: 'Authentication required' }); return null; }
-  return user;
-}
-
-function requireAdmin(req, res) {
-  const user = checkAuth(req);
-  if (!user || user.role !== 'admin') { res.status(403).json({ error: 'Admin access required' }); return null; }
-  return user;
-}
-
-// Auth
+// Auth — public route
 app.post('/api/auth', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -38,16 +22,19 @@ app.post('/api/auth', async (req, res) => {
     const user = await dataStore.authenticateUser(username, password);
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
-    res.json({ success: true, user: { id: user.id, username: user.username, role: user.role, isAuthenticated: true } });
+    const token = generateToken(user);
+    res.json({ success: true, token, user: { id: user.id, username: user.username, role: user.role } });
   } catch (error) {
     console.error('Auth error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Events
+// All routes below require valid JWT
+app.use('/api', verifyToken);
+
+// Events — any authenticated user can read
 app.get('/api/events', async (req, res) => {
-  const user = requireAuth(req, res); if (!user) return;
   try {
     const dataStore = new DataStore();
     const events = await dataStore.getEvents();
@@ -58,8 +45,8 @@ app.get('/api/events', async (req, res) => {
   }
 });
 
-app.post('/api/events', async (req, res) => {
-  const user = requireAdmin(req, res); if (!user) return;
+// Events — admin only for mutations
+app.post('/api/events', requireAdmin, async (req, res) => {
   try {
     const dataStore = new DataStore();
     const event = await dataStore.createEvent(req.body);
@@ -70,8 +57,7 @@ app.post('/api/events', async (req, res) => {
   }
 });
 
-app.put('/api/events', async (req, res) => {
-  const user = requireAdmin(req, res); if (!user) return;
+app.put('/api/events', requireAdmin, async (req, res) => {
   try {
     const { id, ...updateData } = req.body;
     if (!id) return res.status(400).json({ error: 'Event ID is required' });
@@ -85,8 +71,7 @@ app.put('/api/events', async (req, res) => {
   }
 });
 
-app.delete('/api/events', async (req, res) => {
-  const user = requireAdmin(req, res); if (!user) return;
+app.delete('/api/events', requireAdmin, async (req, res) => {
   try {
     const eventId = req.query.id;
     if (!eventId) return res.status(400).json({ error: 'Event ID is required' });
@@ -100,9 +85,8 @@ app.delete('/api/events', async (req, res) => {
   }
 });
 
-// Members
-app.get('/api/members', async (req, res) => {
-  const user = requireAdmin(req, res); if (!user) return;
+// Members — admin only
+app.get('/api/members', requireAdmin, async (req, res) => {
   try {
     const dataStore = new DataStore();
     const memberId = req.query.id;
@@ -120,8 +104,7 @@ app.get('/api/members', async (req, res) => {
   }
 });
 
-app.post('/api/members', async (req, res) => {
-  const user = requireAdmin(req, res); if (!user) return;
+app.post('/api/members', requireAdmin, async (req, res) => {
   try {
     if (!req.body.name) return res.status(400).json({ error: 'Member name is required' });
     const dataStore = new DataStore();
@@ -133,8 +116,7 @@ app.post('/api/members', async (req, res) => {
   }
 });
 
-app.put('/api/members', async (req, res) => {
-  const user = requireAdmin(req, res); if (!user) return;
+app.put('/api/members', requireAdmin, async (req, res) => {
   try {
     const { id, ...updateData } = req.body;
     if (!id) return res.status(400).json({ error: 'Member ID is required' });
@@ -150,8 +132,7 @@ app.put('/api/members', async (req, res) => {
   }
 });
 
-app.delete('/api/members', async (req, res) => {
-  const user = requireAdmin(req, res); if (!user) return;
+app.delete('/api/members', requireAdmin, async (req, res) => {
   try {
     const deleteId = req.query.id;
     if (!deleteId) return res.status(400).json({ error: 'Member ID is required' });
@@ -165,9 +146,8 @@ app.delete('/api/members', async (req, res) => {
   }
 });
 
-// Event Participants
-app.get('/api/event-participants', async (req, res) => {
-  const user = requireAdmin(req, res); if (!user) return;
+// Event Participants — admin only
+app.get('/api/event-participants', requireAdmin, async (req, res) => {
   try {
     const eventId = req.query.eventId;
     if (!eventId) return res.status(400).json({ error: 'Event ID is required' });
@@ -181,8 +161,7 @@ app.get('/api/event-participants', async (req, res) => {
   }
 });
 
-app.post('/api/event-participants', async (req, res) => {
-  const user = requireAdmin(req, res); if (!user) return;
+app.post('/api/event-participants', requireAdmin, async (req, res) => {
   try {
     const { eventId, memberId, ...participantData } = req.body;
     if (!eventId || !memberId) return res.status(400).json({ error: 'Event ID and Member ID are required' });
@@ -196,8 +175,7 @@ app.post('/api/event-participants', async (req, res) => {
   }
 });
 
-app.put('/api/event-participants', async (req, res) => {
-  const user = requireAdmin(req, res); if (!user) return;
+app.put('/api/event-participants', requireAdmin, async (req, res) => {
   try {
     const { participantId, ...updateData } = req.body;
     if (!participantId) return res.status(400).json({ error: 'Participant ID is required' });
@@ -212,8 +190,7 @@ app.put('/api/event-participants', async (req, res) => {
   }
 });
 
-app.delete('/api/event-participants', async (req, res) => {
-  const user = requireAdmin(req, res); if (!user) return;
+app.delete('/api/event-participants', requireAdmin, async (req, res) => {
   try {
     const { eventId, memberId } = req.query;
     if (!eventId || !memberId) return res.status(400).json({ error: 'Event ID and Member ID are required' });

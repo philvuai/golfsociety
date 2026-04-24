@@ -10,42 +10,37 @@ class ApiError extends Error {
 }
 
 class ApiService {
-  private user: User | null = null;
-
-  setUser(user: User | null) {
-    this.user = user;
+  private getToken(): string | null {
+    return localStorage.getItem('golf-society-token');
   }
 
-  private getAuthHeaders(): Record<string, string> {
-    if (!this.user) {
-      return {};
+  setToken(token: string | null) {
+    if (token) {
+      localStorage.setItem('golf-society-token', token);
+    } else {
+      localStorage.removeItem('golf-society-token');
     }
-    
-    return {
-      'Authorization': `Bearer ${JSON.stringify({
-        id: this.user.id,
-        username: this.user.username,
-        role: this.user.role
-      })}`
-    };
   }
 
   private async makeRequest(url: string, options: RequestInit = {}) {
-    const authHeaders = this.getAuthHeaders();
-    const baseHeaders: Record<string, string> = {
+    const token = this.getToken();
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...authHeaders,
-    };
-    
-    const finalHeaders = {
-      ...baseHeaders,
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...(options.headers as Record<string, string> || {}),
     };
 
     const response = await fetch(`${API_BASE}${url}`, {
       ...options,
-      headers: finalHeaders,
+      headers,
     });
+
+    if (response.status === 401) {
+      this.setToken(null);
+      localStorage.removeItem('golf-society-user');
+      window.location.href = '/login';
+      throw new ApiError(401, 'Session expired');
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -63,11 +58,16 @@ class ApiService {
     });
 
     if (response.success) {
-      this.setUser(response.user);
+      this.setToken(response.token);
       return response.user;
     }
 
     throw new Error('Login failed');
+  }
+
+  logout() {
+    this.setToken(null);
+    localStorage.removeItem('golf-society-user');
   }
 
   // Events
@@ -99,7 +99,7 @@ class ApiService {
     return response.event;
   }
 
-  // Members - Admin only
+  // Members
   async getMembers(): Promise<Member[]> {
     const response = await this.makeRequest('/members');
     return response.members;
@@ -133,15 +133,15 @@ class ApiService {
     return response.member;
   }
 
-  // Event Participants - Admin only
+  // Event Participants
   async getEventParticipants(eventId: string): Promise<EventParticipant[]> {
     const response = await this.makeRequest(`/event-participants?eventId=${eventId}`);
     return response.participants;
   }
 
   async addParticipantToEvent(
-    eventId: string, 
-    memberId: string, 
+    eventId: string,
+    memberId: string,
     participantData: Partial<Pick<EventParticipant, 'memberGroup' | 'paymentStatus' | 'paymentMethod' | 'playerFee' | 'notes'>>
   ): Promise<EventParticipant> {
     const response = await this.makeRequest('/event-participants', {
@@ -151,7 +151,6 @@ class ApiService {
     return response.participant;
   }
 
-  // Alias for backward compatibility and cleaner naming
   async createEventParticipant(
     participantData: Omit<EventParticipant, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<EventParticipant> {
@@ -179,7 +178,6 @@ class ApiService {
     return response.participant;
   }
 
-  // Alias for cleaner naming
   async updateEventParticipant(participant: EventParticipant): Promise<EventParticipant> {
     return this.updateParticipant(participant.id, {
       memberGroup: participant.memberGroup,
@@ -197,7 +195,6 @@ class ApiService {
     return response.participant;
   }
 
-  // Alias for cleaner naming
   async deleteEventParticipant(participantId: string): Promise<EventParticipant> {
     const response = await this.makeRequest(`/event-participants?id=${participantId}`, {
       method: 'DELETE',

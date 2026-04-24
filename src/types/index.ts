@@ -1,17 +1,9 @@
-export interface Player {
-  id: string;
-  name: string;
-  email?: string;
-  joinedDate: string;
-}
-
 export interface Event {
   id: string;
   name: string;
   date: string;
   location: string;
   status: 'upcoming' | 'in-progress' | 'completed';
-  players: string[];
   playerCount: number;
   playerFee: number;
   playerGroup1Name?: string;
@@ -27,7 +19,7 @@ export interface Event {
   funds: Funds;
   surplus: number;
   notes: string;
-  participants?: EventParticipant[]; // Optional for backward compatibility
+  participants?: EventParticipant[];
   createdAt?: string;
   updatedAt?: string;
   deletedAt?: string;
@@ -43,7 +35,6 @@ export interface User {
   id: string;
   username: string;
   role: 'admin' | 'viewer';
-  isAuthenticated: boolean;
 }
 
 export interface Member {
@@ -68,7 +59,7 @@ export interface EventParticipant {
   paymentMethod?: 'cash' | 'card' | 'bank_transfer';
   playerFee: number;
   notes?: string;
-  member?: Member; // Populated via JOIN
+  member?: Member;
   createdAt?: string;
   updatedAt?: string;
 }

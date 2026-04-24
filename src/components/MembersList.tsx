@@ -4,8 +4,7 @@ import { User, UserPlus, Edit2, Trash2, Search, Mail, Phone, Trophy } from 'luci
 import { Member } from '../types';
 import { apiService } from '../services/api';
 import MemberForm from './MemberForm';
-import { useTheme } from '../contexts/ThemeContext';
-import { ThemeProvider as StyledThemeProvider } from 'styled-components';
+import { useToast } from '../contexts/ToastContext';
 
 const Container = styled.div`
   padding: 32px;
@@ -256,7 +255,7 @@ const MembersList: React.FC<MembersListProps> = ({ user }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
 
-  const { theme } = useTheme();
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchMembers();
@@ -289,7 +288,7 @@ const MembersList: React.FC<MembersListProps> = ({ user }) => {
       setMembers(prev => [...prev, newMember]);
       setShowAddForm(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to create member');
+      showToast(err.message || 'Failed to create member', 'error');
     }
   };
 
@@ -301,7 +300,7 @@ const MembersList: React.FC<MembersListProps> = ({ user }) => {
       ));
       setEditingMember(null);
     } catch (err: any) {
-      setError(err.message || 'Failed to update member');
+      showToast(err.message || 'Failed to update member', 'error');
     }
   };
 
@@ -314,7 +313,7 @@ const MembersList: React.FC<MembersListProps> = ({ user }) => {
       await apiService.deleteMember(memberId);
       setMembers(prev => prev.filter(member => member.id !== memberId));
     } catch (err: any) {
-      setError(err.message || 'Failed to delete member');
+      showToast(err.message || 'Failed to delete member', 'error');
     }
   };
 
@@ -328,16 +327,16 @@ const MembersList: React.FC<MembersListProps> = ({ user }) => {
 
   if (loading) {
     return (
-      <StyledThemeProvider theme={theme}>
+      <>
         <Container>
           <LoadingContainer>Loading members...</LoadingContainer>
         </Container>
-      </StyledThemeProvider>
+      </>
     );
   }
 
   return (
-    <StyledThemeProvider theme={theme}>
+    <>
       <Container>
         <Header>
           <Title>Members</Title>
@@ -439,7 +438,7 @@ const MembersList: React.FC<MembersListProps> = ({ user }) => {
           />
         )}
       </Container>
-    </StyledThemeProvider>
+    </>
   );
 };
 
